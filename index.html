@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clutch Metrics | Tactical Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Inter:wght@300;400;700;900&display=swap');
+body{background:#020617;color:#f1f5f9;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+.glass{background:rgba(15,23,42,.6);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1)}
+.pitch{background:#0f172a;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:30px 30px;position:relative;aspect-ratio:68/105;width:100%;border:2px solid #334155;border-radius:4px}
+.pitch-line{border:1px solid rgba(255,255,255,.2);position:absolute;pointer-events:none}
+.shot-dot{position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);z-index:20;transition:scale .2s;cursor:pointer}
+.shot-dot:hover{scale:1.5;z-index:30}
+.filter-btn.active,.pf-btn.active{background:#0ea5e9;color:#000}
+.pf-btn.active{background:#8b5cf6;color:#fff}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:100;align-items:center;justify-content:center}
+.modal.active{display:flex}
+#auth-screen{display:flex;position:fixed;inset:0;background:#020617;z-index:200;align-items:center;justify-content:center}
+#auth-screen.hidden{display:none}
+.auth-tab.active{background:#0ea5e9;color:#000}
+.inp{width:100%;background:#0f172a;border:1px solid #334155;padding:12px 16px;border-radius:12px;outline:none;color:#f1f5f9;transition:border-color .2s;font-family:'Inter',sans-serif}
+.inp:focus{border-color:#0ea5e9}
+.err{color:#f43f5e;font-size:12px;margin-top:4px;display:none}
+.err.show{display:block}
+footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
+</style>
+</head>
+<body class="p-4 lg:p-8">
+
+<!-- AUTH -->
+<div id="auth-screen">
+<div class="glass p-8 rounded-[2.5rem] w-full max-w-md shadow-2xl shadow-sky-500/10">
+<div class="text-center mb-8">
+<h1 class="text-3xl font-black tracking-tighter text-sky-400 uppercase">Clutch Metrics</h1>
+<p class="text-slate-500 text-sm font-mono mt-1">Tactical Pro Dashboard</p>
+</div>
+<div class="flex bg-slate-800 p-1 rounded-xl border border-white/10 mb-6">
+<button onclick="switchTab('login')" id="tab-login" class="auth-tab flex-1 px-4 py-2 rounded-lg text-xs font-bold transition active uppercase">Login</button>
+<button onclick="switchTab('signup')" id="tab-signup" class="auth-tab flex-1 px-4 py-2 rounded-lg text-xs font-bold transition uppercase">Sign Up</button>
+</div>
+<div id="form-login" class="space-y-4">
+<input id="lu" class="inp" placeholder="Username">
+ <div><input id="lp" type="password" class="inp" placeholder="Password"><p id="lerr" class="err">Invalid username or password.</p></div>
+ <button onclick="doLogin()" class="w-full bg-sky-500 hover:bg-sky-400 text-black py-3 rounded-xl font-black text-sm uppercase shadow-lg shadow-sky-500/30">Login</button>
+ </div>
+ <div id="form-signup" class="space-y-4 hidden">
+ <div><input id="su" class="inp" placeholder="Choose Username"><p id="suerr" class="err">Username already taken.</p></div>
+ <input id="steam" class="inp" placeholder="Team Name (e.g. CB South, Lincoln FC)">
+ <input id="sp" type="password" class="inp" placeholder="Choose Password">
+ <div><input id="sp2" type="password" class="inp" placeholder="Confirm Password"><p id="sperr" class="err">Passwords do not match.</p></div>
+<button onclick="doSignup()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black text-sm uppercase shadow-lg shadow-emerald-500/30">Create Account</button>
+ </div>
+ </div>
+ </div>
+
+<!-- APP -->
+<div class="max-w-[1500px] mx-auto flex-1">
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5 shadow-2xl">
+  <div>
+  <h1 class="text-3xl font-black tracking-tighter text-sky-400 uppercase">Clutch Metrics</h1>
+  <p class="text-slate-400 text-sm font-bold" id="team-label"></p>
+  <p class="text-slate-500 text-sm font-mono" id="sessionLabel">Session: Live_Draft_01</p>
+  </div>
+<div class="flex bg-slate-800 p-1 rounded-xl border border-white/10">
+<button onclick="setFilter('myteam')" id="f-cbs" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold transition active uppercase"><span id="f-cbs-label">My Team</span></button>
+ <button onclick="setFilter('Opponent')" id="f-opp" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold transition uppercase">Opponent</button>
+ <button onclick="setFilter('Both')" id="f-both" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold transition uppercase">Both</button>
+</div>
+<div class="flex gap-2 flex-wrap">
+<button onclick="openModal('shot-modal')" class="bg-sky-500 hover:bg-sky-400 text-black px-5 py-2 rounded-lg font-black text-xs uppercase shadow-lg shadow-sky-500/20">Add Shot</button>
+ <button onclick="openModal('player-modal')" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg font-black text-xs uppercase shadow-lg shadow-violet-500/20">Players</button>
+<button onclick="saveSession()" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-lg font-black text-xs uppercase shadow-lg shadow-emerald-500/20">Save Half</button>
+  <button onclick="doLogout()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-black text-xs uppercase">Logout</button>
+  </div>
+</div>
+
+  <!-- Player filter bar -->
+  <div id="pf-bar" class="hidden mb-4 glass p-3 rounded-2xl flex gap-2 flex-wrap items-center">
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Player:</span>
+<button onclick="setPlayerFilter('ALL')" id="pf-all" class="pf-btn active px-3 py-1 rounded-lg text-xs font-bold border border-white/10 transition uppercase">All</button>
+ <div id="pf-chips" class="flex gap-2 flex-wrap"></div>
+ </div>
+<div class="grid grid-cols-12 gap-6">
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<div class="grid grid-cols-4 gap-4 text-center">
+<div class="glass p-4 rounded-2xl"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Shots</p><h2 id="kpi-shots" class="text-3xl font-black">0</h2></div>
+<div class="glass p-4 rounded-2xl"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">On Target</p><h2 id="kpi-target" class="text-3xl font-black text-sky-400">0</h2></div>
+<div class="glass p-4 rounded-2xl"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Goals</p><h2 id="kpi-goals" class="text-3xl font-black text-emerald-400">0</h2></div>
+<div class="glass p-4 rounded-2xl"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Conv %</p><h2 id="kpi-conv" class="text-3xl font-black text-amber-400">0%</h2></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+ <div class="glass p-6 rounded-3xl h-[300px]"><h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest opacity-70">Tactical Origin</h3><div class="h-full pb-8"><canvas id="chart-type"></canvas></div></div>
+<div class="glass p-6 rounded-3xl h-[300px]"><h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest opacity-70">Positional Efficiency</h3><div class="h-full pb-8"><canvas id="chart-loc"></canvas></div></div>
+  </div>
+<div class="glass rounded-3xl overflow-hidden shadow-xl">
+    <div class="bg-white/5 px-6 py-3 border-b border-white/5 flex justify-between items-center">
+  <span class="text-xs font-bold opacity-50 uppercase tracking-widest">Live Shot Log</span>
+   <span id="filter-status" class="text-[10px] bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded italic uppercase font-bold">Showing: My Team</span>
+   </div>
+   <div class="max-h-60 overflow-y-auto font-mono text-[11px]"><table class="w-full text-left"><tbody id="table-body" class="divide-y divide-white/5"></tbody></table></div>
+   </div>
+</div>
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<div class="glass p-6 rounded-[2rem] flex flex-col items-center shadow-2xl">
+<h3 class="text-xs font-bold text-slate-500 uppercase mb-6 tracking-[.2em]">Spatial Distribution</h3>
+ <div class="pitch shadow-inner shadow-black" id="heatmap-pitch">
+ <div class="pitch-line w-full top-1/2 border-slate-700/50"></div>
+<div class="pitch-line w-3/5 h-[16%] top-0 left-[20%] border-slate-700/50"></div>
+ <div class="pitch-line w-3/5 h-[16%] bottom-0 left-[20%] border-slate-700/50"></div>
+ <div class="pitch-line w-20 h-20 rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-slate-700/50"></div>
+</div>
+</div>
+<div class="glass p-6 rounded-3xl shadow-xl"><h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Archives</h3><div id="archives-container" class="space-y-2"></div></div>
+</div>
+</div>
+</div>
+
+<footer class="mt-12 py-8 rounded-2xl glass">
+  <div class="max-w-[1500px] mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+ <p class="text-slate-400 text-sm">This tactical dashboard provides real-time visualization and statistical analysis for halftime performance evaluation and It enables coaches to track shot volume, accuracy, and attacking patterns to drive data-informed strategic adjustments.</p>
+ <p class="text-sky-500 font-black tracking-widest uppercase italic text-lg shrink-0">Made by Parth Kumar</p>
+ </div>
+</footer>
+
+<!-- SHOT MODAL -->
+<div id="shot-modal" class="modal">
+<div class="glass p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl shadow-sky-500/10" style="max-height:90vh;overflow-y:auto">
+<h2 class="text-xl font-black mb-6 italic text-sky-400 tracking-tighter uppercase underline decoration-sky-500/30">Log Event</h2>
+<div class="space-y-4">
+<input type="number" id="m-min" class="inp" placeholder="Minute">
+<select id="m-team" onchange="onTeamChange()" class="inp">
+ <option id="opt-myteam" value="myteam">My Team</option><option value="Opponent">Opponent</option>
+ </select>
+ <div id="shooter-cbs"><select id="m-shooter-sel" class="inp"><option value="">— Select Shooter —</option></select></div>
+ <div id="shooter-opp" class="hidden"><input id="m-shooter-txt" class="inp" placeholder="Shooter Name"></div>
+ <select id="m-type" class="inp">
+   <option>Through Ball</option><option>Cross</option><option>Set Piece</option><option>Mistake</option><option>Rebound</option>
+ </select>
+<div id="assist-cbs"><select id="m-assist-sel" class="inp"><option value="">— Assister (optional) —</option></select></div>
+ <div id="assist-opp" class="hidden"><input id="m-assist-txt" class="inp" placeholder="Assister (optional)"></div>
+<select id="m-loc" class="inp">
+ <option value="Center Box">Center Box</option><option value="Left Box">Left Box</option><option value="Right Box">Right Box</option><option value="Outside Box">Outside Box</option>
+</select>
+<select id="m-out" class="inp">
+ <option value="Miss">Miss</option><option value="On Target">On Target</option><option value="Goal">Goal</option>
+</select>
+<div class="flex gap-3 pt-2">
+ <button onclick="logShot()" class="flex-1 bg-sky-500 py-3 rounded-xl font-black text-black shadow-lg shadow-sky-500/30 hover:scale-105 transition uppercase text-xs">Commit</button>
+ <button onclick="closeModal('shot-modal')" class="flex-1 bg-slate-700 py-3 rounded-xl font-bold uppercase text-xs">Close</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- PLAYER MODAL -->
+<div id="player-modal" class="modal">
+<div class="glass p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl shadow-violet-500/10" style="max-height:90vh;overflow-y:auto">
+<h2 class="text-xl font-black mb-2 italic text-violet-400 tracking-tighter uppercase underline decoration-violet-500/30">Manage Roster</h2>
+<p class="text-slate-500 text-xs mb-5" id="roster-subtitle">Your team's players, selectable when logging shots.</p>
+ <div class="flex gap-2 mb-5">
+ <input id="new-player" class="inp flex-1" placeholder="Player name (e.g. #10 Smith)">
+   <button onclick="addPlayer()" class="bg-violet-600 hover:bg-violet-500 text-white px-4 rounded-xl font-black text-xs uppercase">Add</button>
+</div>
+<div id="player-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+ <button onclick="closeModal('player-modal')" class="w-full mt-5 bg-slate-700 py-3 rounded-xl font-bold uppercase text-xs">Done</button>
+</div>
+</div>
+
+<script>
+// -- AUTH ---------------------------------------------------------------------
+let currentUser=null, teamName='My Team', allShots=[], filterMode='myteam', savedSessions={}, players=[], playerFilter='ALL', tChart, lChart;
+const getUsers=()=>JSON.parse(localStorage.getItem('cm_users')||'{}');
+const saveUsers=u=>localStorage.setItem('cm_users',JSON.stringify(u));
+const uKey=()=>`cm_data_${currentUser}`;
+const pKey=()=>`cm_players_${currentUser}`;
+
+function applyTeamName(){
+  const t=teamName||'My Team';
+  document.getElementById('team-label').innerText=t;
+  document.getElementById('f-cbs-label').innerText=t;
+  document.getElementById('opt-myteam').innerText=t;
+  document.getElementById('roster-subtitle').innerText=`${t} players, selectable when logging shots.`;
+}
+
+function switchTab(t){
+  ['login','signup'].forEach(x=>{
+    document.getElementById('form-'+x).classList.toggle('hidden',x!==t);
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+  });
+  ['lerr','suerr','sperr'].forEach(id=>document.getElementById(id).classList.remove('show'));
+}
+
+function doLogin(){
+  const u=document.getElementById('lu').value.trim(), p=document.getElementById('lp').value, users=getUsers();
+  if(!users[u]||users[u].password!==p){document.getElementById('lerr').classList.add('show');return;}
+  currentUser=u; teamName=users[u].team||'My Team'; filterMode='myteam';
+  savedSessions=JSON.parse(localStorage.getItem(uKey())||'{}');
+  players=JSON.parse(localStorage.getItem(pKey())||'[]');
+  document.getElementById('auth-screen').classList.add('hidden');
+  applyTeamName(); updateUI();
+}
+
+function doSignup(){
+  const u=document.getElementById('su').value.trim(), p=document.getElementById('sp').value, p2=document.getElementById('sp2').value, users=getUsers();
+  const team=document.getElementById('steam').value.trim()||'My Team';
+  let ok=true;
+  if(users[u]){document.getElementById('suerr').classList.add('show');ok=false;}
+  if(p!==p2){document.getElementById('sperr').classList.add('show');ok=false;}
+  if(!ok||!u||!p)return;
+  users[u]={password:p,team}; saveUsers(users);
+  document.getElementById('lu').value=u; document.getElementById('lp').value=p;
+  switchTab('login'); doLogin();
+}
+
+function doLogout(){
+  currentUser=null; teamName='My Team'; allShots=[]; savedSessions={}; players=[]; playerFilter='ALL'; filterMode='myteam';
+  document.getElementById('auth-screen').classList.remove('hidden');
+  updateUI();
+}
+
+// -- PLAYERS ------------------------------------------------------------------
+function addPlayer(){
+  const inp=document.getElementById('new-player'), name=inp.value.trim();
+  if(!name||players.includes(name))return;
+  players.push(name); inp.value='';
+  localStorage.setItem(pKey(),JSON.stringify(players));
+  renderPlayerList(); refreshPlayerSelects(); updatePlayerFilterBar();
+}
+
+function removePlayer(name){
+  players=players.filter(p=>p!==name);
+  if(playerFilter===name)playerFilter='ALL';
+  localStorage.setItem(pKey(),JSON.stringify(players));
+  renderPlayerList(); refreshPlayerSelects(); updatePlayerFilterBar(); updateUI();
+}
+
+function renderPlayerList(){
+  const el=document.getElementById('player-list');
+  el.innerHTML=players.length?players.map(p=>`
+<div class="flex items-center justify-between bg-white/5 border border-white/5 px-4 py-2 rounded-xl group">
+ <span class="text-sm font-bold text-violet-300">${p}</span>
+ <button onclick="removePlayer('${p.replace(/'/g,"\\'")}')" class="text-rose-900 group-hover:text-rose-500 font-black">x</button>
+</div>`).join('')
+:'<p class="text-slate-600 text-xs text-center py-4">No players added yet.</p>';
+}
+
+function refreshPlayerSelects(){
+  const opts='<option value="">— Select Shooter —</option>'+players.map(p=>`<option>${p}</option>`).join('');
+  const aOpts='<option value="">— Assister (optional) —</option>'+players.map(p=>`<option>${p}</option>`).join('');
+  document.getElementById('m-shooter-sel').innerHTML=opts;
+  document.getElementById('m-assist-sel').innerHTML=aOpts;
+}
+
+function updatePlayerFilterBar(){
+  const bar=document.getElementById('pf-bar');
+  if(!players.length){bar.classList.add('hidden');return;}
+  bar.classList.remove('hidden');
+  document.getElementById('pf-chips').innerHTML=players.map(p=>`
+<button onclick="setPlayerFilter('${p.replace(/'/g,"\\'")}')" data-pf="${p}"
+class="pf-btn ${playerFilter===p?'active':''} px-3 py-1 rounded-lg text-xs font-bold border border-white/10 transition uppercase">${p}</button>`).join('');
+  document.getElementById('pf-all').className='pf-btn '+(playerFilter==='ALL'?'active':'')+' px-3 py-1 rounded-lg text-xs font-bold border border-white/10 transition uppercase';
+}
+
+function setPlayerFilter(p){playerFilter=p; updatePlayerFilterBar(); updateUI();}
+
+// -- MODAL --------------------------------------------------------------------
+function openModal(id){
+  document.getElementById(id).classList.add('active');
+  if(id==='shot-modal'){
+    refreshPlayerSelects();
+    ['m-min','m-shooter-txt','m-assist-txt'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('m-team').value='myteam'; onTeamChange();
+  }
+  if(id==='player-modal') renderPlayerList();
+}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+
+function onTeamChange(){
+  const isMine=document.getElementById('m-team').value==='myteam';
+  document.getElementById('shooter-cbs').classList.toggle('hidden',!isMine);
+  document.getElementById('shooter-opp').classList.toggle('hidden',isMine);
+  document.getElementById('assist-cbs').classList.toggle('hidden',!isMine);
+  document.getElementById('assist-opp').classList.toggle('hidden',isMine);
+}
+
+// -- SHOTS --------------------------------------------------------------------
+const zones={'Center Box':{x:50,y:12},'Left Box':{x:25,y:12},'Right Box':{x:75,y:12},'Outside Box':{x:50,y:30}};
+
+function logShot(){
+  const isMine=document.getElementById('m-team').value==='myteam';
+  const shooter=isMine?document.getElementById('m-shooter-sel').value:document.getElementById('m-shooter-txt').value.trim()||'—';
+  const assister=isMine?document.getElementById('m-assist-sel').value:document.getElementById('m-assist-txt').value.trim();
+  const loc=document.getElementById('m-loc').value;
+  const z=zones[loc];
+  const team=isMine?teamName:'Opponent';
+  allShots.push({
+    id:Date.now(),
+    min:document.getElementById('m-min').value||'0',
+    team, shooter:shooter||'—', assister,
+    type:document.getElementById('m-type').value,
+    loc, out:document.getElementById('m-out').value,
+    x:z.x+(Math.random()*6-3),
+    y:!isMine?100-(z.y+(Math.random()*4-2)):z.y+(Math.random()*4-2)
+  });
+  closeModal('shot-modal'); updateUI();
+}
+
+function delShot(id){allShots=allShots.filter(s=>s.id!==id);updateUI();}
+
+// -- FILTER + RENDER ----------------------------------------------------------
+function setFilter(m){
+  filterMode=m;
+  ['cbs','opp','both'].forEach(x=>document.getElementById('f-'+x).classList.remove('active'));
+  document.getElementById(m==='myteam'?'f-cbs':m==='Opponent'?'f-opp':'f-both').classList.add('active');
+  updateUI();
+}
+
+function updateUI(){
+  let data=allShots.filter(s=>filterMode==='Both'||s.team===(filterMode==='myteam'?teamName:filterMode));
+  if(playerFilter!=='ALL') data=data.filter(s=>s.shooter===playerFilter||s.assister===playerFilter);
+  const goals=data.filter(s=>s.out==='Goal').length;
+  const target=data.filter(s=>s.out!=='Miss').length;
+  document.getElementById('kpi-shots').innerText=data.length;
+  document.getElementById('kpi-target').innerText=target;
+  document.getElementById('kpi-goals').innerText=goals;
+  document.getElementById('kpi-conv').innerText=data.length?Math.round(goals/data.length*100)+'%':'0%';
+  const filterLabel=filterMode==='myteam'?teamName:filterMode;
+  document.getElementById('filter-status').innerText=`Showing: ${filterLabel}${playerFilter!=='ALL'?' · '+playerFilter:''}`;
+
+  document.getElementById('table-body').innerHTML=data.slice().reverse().map(s=>`
+    <tr class="hover:bg-white/5 transition">
+      <td class="px-4 py-2 opacity-40">${s.min}'</td>
+      <td class="px-4 py-2 font-bold ${s.team===teamName?'text-sky-400':'text-rose-500'} uppercase text-[10px]">${s.team}</td>
+      <td class="px-4 py-2"><div class="font-bold">${s.shooter}</div>${s.assister?`<div class="text-[10px] text-amber-400">↗ ${s.assister}</div>`:''}</td>
+      <td class="px-4 py-2 uppercase tracking-tighter opacity-80 text-[10px]">${s.type}</td>
+      <td class="px-4 py-2 text-slate-500 text-[10px]">${s.loc}</td>
+      <td class="px-4 py-2 ${s.out==='Goal'?'text-emerald-400 font-bold':''} italic text-[10px]">${s.out}</td>
+      <td class="px-4 py-2 text-right"><button onclick="delShot(${s.id})" class="text-rose-900 hover:text-rose-500">x</button></td>
+    </tr>`).join('');
+
+  const pitch=document.getElementById('heatmap-pitch');
+  pitch.querySelectorAll('.shot-dot').forEach(d=>d.remove());
+  data.forEach(s=>{
+    const d=document.createElement('div');
+    d.className='shot-dot';
+    d.style.cssText=`left:${s.x}%;top:${s.y}%;background:${s.team===teamName?'#0ea5e9':'#f43f5e'};box-shadow:0 0 10px ${s.team===teamName?'#0ea5e988':'#f43f5e88'}`;
+    if(s.out==='Goal'){d.style.border='2px solid white';d.style.width='14px';d.style.height='14px';}
+    d.title=`${s.min}' · ${s.shooter}${s.assister?' · ↗'+s.assister:''} · ${s.out}`;
+    pitch.appendChild(d);
+  });
+
+  const co={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#475569',font:{family:'JetBrains Mono',size:10}}},x:{ticks:{color:'#475569',font:{family:'JetBrains Mono',size:10}},grid:{display:false}}}};
+  const types=['Through Ball','Cross','Set Piece','Mistake','Rebound'];
+  const locs=['Center Box','Left Box','Right Box','Outside Box'];
+  if(tChart)tChart.destroy(); if(lChart)lChart.destroy();
+  tChart=new Chart(document.getElementById('chart-type'),{type:'bar',data:{labels:types,datasets:[{data:types.map(t=>data.filter(s=>s.type===t).length),backgroundColor:'#0ea5e9',borderRadius:4,barThickness:20}]},options:co});
+  lChart=new Chart(document.getElementById('chart-loc'),{type:'line',data:{labels:locs,datasets:[{data:locs.map(l=>data.filter(s=>s.loc===l).length),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.4,borderWidth:3,pointRadius:4,pointBackgroundColor:'#10b981'}]},options:co});
+
+  document.getElementById('archives-container').innerHTML=Object.keys(savedSessions).map(n=>`
+    <div class="p-3 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center group hover:bg-white/10 transition">
+      <span class="text-[11px] font-bold cursor-pointer hover:text-sky-400 truncate pr-4" onclick="loadArchive('${n}')">${n}</span>
+      <button onclick="delArchive('${n}')" class="text-rose-900 group-hover:text-rose-500 font-black">x</button>
+    </div>`).join('');
+
+  updatePlayerFilterBar();
+}
+
+function saveSession(){
+  if(!currentUser)return;
+  const n=prompt('Session Name (e.g. vs North Penn H1):');
+  if(!n)return;
+  savedSessions[n]={data:[...allShots],date:new Date().toLocaleString()};
+  localStorage.setItem(uKey(),JSON.stringify(savedSessions));
+  updateUI();
+}
+
+function loadArchive(n){allShots=savedSessions[n].data;document.getElementById('sessionLabel').innerText=`Archive: ${n}`;updateUI();}
+function delArchive(n){if(confirm(`Delete ${n}?`)){delete savedSessions[n];localStorage.setItem(uKey(),JSON.stringify(savedSessions));updateUI();}}
+
+// init
+switchTab('login'); updateUI();
+</script>
+</body>
+</html>
