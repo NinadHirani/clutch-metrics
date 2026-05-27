@@ -37,7 +37,7 @@ footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
 
 /* === 3D SOCCER BALL === */
 .ball-scene{perspective:800px;width:160px;height:160px}
-.ball-scene-sm{perspective:500px;width:56px;height:56px}
+.ball-scene-sm{perspective:500px;width:52px;height:52px}
 .soccer-ball{
   width:100%;height:100%;position:relative;
   transform-style:preserve-3d;
@@ -49,67 +49,16 @@ footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
   animation:spinBall 6s linear infinite;
 }
 @keyframes spinBall{
-  0%{transform:rotateY(0deg) rotateX(15deg)}
-  100%{transform:rotateY(360deg) rotateX(15deg)}
+  0%{transform:rotateY(0deg) rotateX(10deg)}
+  100%{transform:rotateY(360deg) rotateX(10deg)}
 }
-.ball-face{
-  position:absolute;inset:0;border-radius:50%;
-  backface-visibility:visible;
-}
-.ball-face-front{
-  background:radial-gradient(circle at 35% 35%,#f8fafc 0%,#e2e8f0 40%,#94a3b8 100%);
-  box-shadow:inset -8px -8px 20px rgba(0,0,0,0.3),inset 4px 4px 10px rgba(255,255,255,0.6),0 0 60px rgba(14,165,233,0.3);
-  transform:translateZ(1px);
-}
-.ball-face-back{
-  background:radial-gradient(circle at 65% 65%,#cbd5e1 0%,#64748b 100%);
-  transform:rotateY(180deg) translateZ(1px);
-}
-/* Pentagon pattern overlay */
-.ball-pattern{
-  position:absolute;inset:0;border-radius:50%;overflow:hidden;
-  transform:translateZ(2px);
-}
-.ball-pattern::before{
-  content:'';position:absolute;
-  width:40px;height:40px;top:20%;left:30%;
-  background:#1e293b;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  opacity:0.7;
-}
-.ball-pattern::after{
-  content:'';position:absolute;
-  width:32px;height:32px;bottom:22%;right:20%;
-  background:#1e293b;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  opacity:0.6;
-}
-.ball-pattern-2::before{
-  content:'';position:absolute;
-  width:28px;height:28px;top:55%;left:12%;
-  background:#1e293b;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  opacity:0.5;
-}
-.ball-pattern-2::after{
-  content:'';position:absolute;
-  width:24px;height:24px;top:10%;right:18%;
-  background:#1e293b;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  opacity:0.55;
-}
-/* Small ball patterns */
-.ball-pattern-sm::before{
-  content:'';position:absolute;
-  width:14px;height:14px;top:18%;left:28%;
-  background:#1e293b;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  opacity:0.7;
-}
-.ball-pattern-sm::after{
-  content:'';position:absolute;
-  width:11px;height:11px;bottom:20%;right:18%;
-  background:#1e293b;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);
-  opacity:0.6;
+.ball-svg{
+  width:100%;height:100%;
+  filter:drop-shadow(0 0 30px rgba(14,165,233,0.3)) drop-shadow(0 8px 20px rgba(0,0,0,0.4));
 }
 /* Ball glow ring */
 .ball-glow{
-  position:absolute;inset:-12px;border-radius:50%;
+  position:absolute;inset:-14px;border-radius:50%;
   border:1px solid rgba(14,165,233,0.15);
   animation:pulseGlow 3s ease-in-out infinite;
 }
@@ -271,17 +220,42 @@ footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
           <div class="ball-scene shrink-0 relative" style="margin-top:20px">
             <div class="ball-glow"></div>
             <div class="soccer-ball">
-              <div class="ball-face ball-face-front"></div>
-              <div class="ball-face ball-face-back"></div>
-              <div class="ball-pattern"></div>
-              <div class="ball-pattern ball-pattern-2" style="transform:translateZ(2px) rotate(72deg)"></div>
+              <svg class="ball-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="ballShade" cx="38%" cy="35%" r="65%">
+                    <stop offset="0%" stop-color="#ffffff"/>
+                    <stop offset="45%" stop-color="#e8ecf0"/>
+                    <stop offset="100%" stop-color="#8898a8"/>
+                  </radialGradient>
+                  <filter id="ballShadow"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3"/></filter>
+                </defs>
+                <circle cx="100" cy="100" r="96" fill="url(#ballShade)" stroke="#94a3b8" stroke-width="1.5"/>
+                <!-- Classic pentagon pattern -->
+                <polygon points="100,28 120,42 114,65 86,65 80,42" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+                <polygon points="148,72 168,90 160,114 138,118 128,96" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+                <polygon points="52,72 72,96 62,118 40,114 32,90" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+                <polygon points="68,148 90,138 110,138 132,148 120,172 80,172" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+                <!-- Seam lines -->
+                <line x1="100" y1="28" x2="100" y2="4" stroke="#b0bec5" stroke-width="0.8" opacity="0.5"/>
+                <line x1="120" y1="42" x2="148" y2="72" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
+                <line x1="80" y1="42" x2="52" y2="72" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
+                <line x1="128" y1="96" x2="110" y2="138" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
+                <line x1="72" y1="96" x2="90" y2="138" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
+                <line x1="114" y1="65" x2="128" y2="96" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
+                <line x1="86" y1="65" x2="72" y2="96" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
+                <line x1="160" y1="114" x2="132" y2="148" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
+                <line x1="40" y1="114" x2="68" y2="148" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
+                <line x1="120" y1="172" x2="130" y2="194" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
+                <line x1="80" y1="172" x2="70" y2="194" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
+                <!-- Highlight -->
+                <circle cx="75" cy="55" r="18" fill="white" opacity="0.12"/>
+              </svg>
             </div>
           </div>
         </div>
 
-        <!-- 3D Mini Pitch + Stat Cards Row -->
+        <!-- 3D Mini Pitch -->
         <div class="flex items-end gap-6 mt-8">
-          <!-- 3D Mini Pitch -->
           <div class="pitch-3d-scene shrink-0">
             <div class="pitch-3d">
               <div class="pitch-3d-surface">
@@ -289,7 +263,6 @@ footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
                 <div class="pitch-3d-center"></div>
                 <div class="pitch-3d-box-top"></div>
                 <div class="pitch-3d-box-bottom"></div>
-                <!-- Shot markers -->
                 <div class="pitch-3d-shot" style="top:25%;left:45%;color:#0ea5e9;background:#0ea5e9"></div>
                 <div class="pitch-3d-shot" style="top:30%;left:55%;color:#10b981;background:#10b981;animation-delay:0.5s"></div>
                 <div class="pitch-3d-shot" style="top:20%;left:38%;color:#0ea5e9;background:#0ea5e9;animation-delay:1s"></div>
@@ -298,18 +271,22 @@ footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
               <div class="goal-post"><div class="goal-post-bar"></div></div>
             </div>
           </div>
-
-          <!-- Floating Metric Cards -->
-          <div class="grid grid-cols-2 gap-4 flex-1">
-            <div class="float-card glass p-5 rounded-2xl text-center border border-emerald-500/20 shadow-lg glow-box-emerald">
-              <p class="text-[10px] text-slate-400 uppercase font-black mb-2 tracking-widest">Total Goals</p>
-              <h2 id="hero-goals" class="text-3xl xl:text-4xl font-black text-emerald-400 font-mono tracking-tight">0</h2>
+          <!-- Description under pitch -->
+          <div class="flex-1 space-y-3">
+            <div class="glass p-4 rounded-xl border border-sky-500/10">
+              <p class="text-[10px] text-sky-400 uppercase font-black tracking-widest mb-1">Live Tracking</p>
+              <p class="text-slate-400 text-xs leading-relaxed">Every shot mapped in real-time. See where your team dominates — and where opponents exploit.</p>
             </div>
-            <div class="float-card glass p-5 rounded-2xl text-center border border-sky-500/20 shadow-lg glow-box-sky">
-              <p class="text-[10px] text-slate-400 uppercase font-black mb-2 tracking-widest">On Target</p>
-              <h2 id="hero-target" class="text-3xl xl:text-4xl font-black text-sky-400 font-mono tracking-tight">0</h2>
+            <div class="glass p-4 rounded-xl border border-emerald-500/10">
+              <p class="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1">Halftime Intel</p>
+              <p class="text-slate-400 text-xs leading-relaxed">Save sessions, compare archives, and make data-backed tactical adjustments at the break.</p>
             </div>
           </div>
+        </div>
+        <!-- Hidden elements for JS compatibility -->
+        <div class="hidden">
+          <span id="hero-goals">0</span>
+          <span id="hero-target">0</span>
         </div>
       </div>
     </div>
@@ -326,9 +303,21 @@ footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
           <div class="flex justify-center mb-2">
             <div class="ball-scene-sm relative">
               <div class="soccer-ball-sm">
-                <div class="ball-face ball-face-front"></div>
-                <div class="ball-face ball-face-back"></div>
-                <div class="ball-pattern ball-pattern-sm"></div>
+                <svg class="ball-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <radialGradient id="ballShadeSm" cx="38%" cy="35%" r="65%">
+                      <stop offset="0%" stop-color="#ffffff"/>
+                      <stop offset="45%" stop-color="#e8ecf0"/>
+                      <stop offset="100%" stop-color="#8898a8"/>
+                    </radialGradient>
+                  </defs>
+                  <circle cx="100" cy="100" r="96" fill="url(#ballShadeSm)" stroke="#94a3b8" stroke-width="2"/>
+                  <polygon points="100,28 120,42 114,65 86,65 80,42" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+                  <polygon points="148,72 168,90 160,114 138,118 128,96" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+                  <polygon points="52,72 72,96 62,118 40,114 32,90" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+                  <polygon points="68,148 90,138 110,138 132,148 120,172 80,172" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+                  <circle cx="75" cy="55" r="18" fill="white" opacity="0.15"/>
+                </svg>
               </div>
             </div>
           </div>
