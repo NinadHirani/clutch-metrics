@@ -5,6 +5,8 @@
 <title>Clutch Metrics | Tactical Pro</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Inter:wght@300;400;700;900&display=swap');
 body{background:#020617;color:#f1f5f9;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
@@ -36,17 +38,18 @@ footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
 <h1 class="text-3xl font-black tracking-tighter text-sky-400 uppercase">Clutch Metrics</h1>
 <p class="text-slate-500 text-sm font-mono mt-1">Tactical Pro Dashboard</p>
 </div>
+<p id="auth-help" class="text-xs text-slate-500 mb-4 text-center">Sign in with Firebase Auth using your email and password.</p>
 <div class="flex bg-slate-800 p-1 rounded-xl border border-white/10 mb-6">
 <button onclick="switchTab('login')" id="tab-login" class="auth-tab flex-1 px-4 py-2 rounded-lg text-xs font-bold transition active uppercase">Login</button>
 <button onclick="switchTab('signup')" id="tab-signup" class="auth-tab flex-1 px-4 py-2 rounded-lg text-xs font-bold transition uppercase">Sign Up</button>
 </div>
 <div id="form-login" class="space-y-4">
-<input id="lu" class="inp" placeholder="Username">
- <div><input id="lp" type="password" class="inp" placeholder="Password"><p id="lerr" class="err">Invalid username or password.</p></div>
+<input id="lu" type="email" class="inp" placeholder="Email address">
+ <div><input id="lp" type="password" class="inp" placeholder="Password"><p id="lerr" class="err">Invalid email or password.</p></div>
  <button onclick="doLogin()" class="w-full bg-sky-500 hover:bg-sky-400 text-black py-3 rounded-xl font-black text-sm uppercase shadow-lg shadow-sky-500/30">Login</button>
  </div>
  <div id="form-signup" class="space-y-4 hidden">
- <div><input id="su" class="inp" placeholder="Choose Username"><p id="suerr" class="err">Username already taken.</p></div>
+ <div><input id="su" type="email" class="inp" placeholder="Email address"><p id="suerr" class="err">Email already in use.</p></div>
  <input id="steam" class="inp" placeholder="Team Name (e.g. CB South, Lincoln FC)">
  <input id="sp" type="password" class="inp" placeholder="Choose Password">
  <div><input id="sp2" type="password" class="inp" placeholder="Confirm Password"><p id="sperr" class="err">Passwords do not match.</p></div>
@@ -170,11 +173,48 @@ footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
 
 <script>
 // -- AUTH ---------------------------------------------------------------------
-let currentUser=null, teamName='My Team', allShots=[], filterMode='myteam', savedSessions={}, players=[], playerFilter='ALL', tChart, lChart;
-const getUsers=()=>JSON.parse(localStorage.getItem('cm_users')||'{}');
-const saveUsers=u=>localStorage.setItem('cm_users',JSON.stringify(u));
+let currentUser=null, currentEmail='', teamName='My Team', allShots=[], filterMode='myteam', savedSessions={}, players=[], playerFilter='ALL', tChart, lChart;
+const firebaseConfig={
+  apiKey:'AIzaSyDox7iut0-sxwNHLS6JpDQt6taMIT_bYfc',
+  authDomain:'clutch-metrics.firebaseapp.com',
+  projectId:'clutch-metrics',
+  storageBucket:'clutch-metrics.firebasestorage.app',
+  messagingSenderId:'213834802582',
+  appId:'1:213834802582:web:13485c95a35965955829b7',
+  measurementId:'G-HCQP3YG37B'
+};
+const firebaseReady=!Object.values(firebaseConfig).some(v=>String(v).includes('YOUR_'));
+let auth=null;
 const uKey=()=>`cm_data_${currentUser}`;
 const pKey=()=>`cm_players_${currentUser}`;
+const teamKey=()=>`cm_team_${currentUser}`;
+
+if(firebaseReady){
+  firebase.initializeApp(firebaseConfig);
+  auth=firebase.auth();
+  auth.onAuthStateChanged(user=>{
+    if(user){
+      currentUser=user.uid;
+      currentEmail=user.email||'';
+      teamName=localStorage.getItem(teamKey())||user.displayName||'My Team';
+      savedSessions=JSON.parse(localStorage.getItem(uKey())||'{}');
+      players=JSON.parse(localStorage.getItem(pKey())||'[]');
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('lu').value=currentEmail;
+      applyTeamName(); updateUI();
+      return;
+    }
+    currentUser=null; currentEmail=''; teamName='My Team'; allShots=[]; savedSessions={}; players=[]; playerFilter='ALL'; filterMode='myteam';
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('auth-help').innerText='Use the Firebase project configured in this file to sign in.';
+    applyTeamName(); updateUI();
+  });
+} else {
+  document.addEventListener('DOMContentLoaded',()=>{
+    const help=document.getElementById('auth-help');
+    if(help) help.innerText='Add your Firebase config in this file to enable login on GitHub Pages.';
+  });
+}
 
 function applyTeamName(){
   const t=teamName||'My Team';
@@ -193,31 +233,35 @@ function switchTab(t){
 }
 
 function doLogin(){
-  const u=document.getElementById('lu').value.trim(), p=document.getElementById('lp').value, users=getUsers();
-  if(!users[u]||users[u].password!==p){document.getElementById('lerr').classList.add('show');return;}
-  currentUser=u; teamName=users[u].team||'My Team'; filterMode='myteam';
-  savedSessions=JSON.parse(localStorage.getItem(uKey())||'{}');
-  players=JSON.parse(localStorage.getItem(pKey())||'[]');
-  document.getElementById('auth-screen').classList.add('hidden');
-  applyTeamName(); updateUI();
+  if(!auth){document.getElementById('auth-help').innerText='Firebase is not configured yet. Replace the placeholder values in index.html first.';return;}
+  const email=document.getElementById('lu').value.trim(), password=document.getElementById('lp').value;
+  document.getElementById('lerr').classList.remove('show');
+  auth.signInWithEmailAndPassword(email,password).catch(()=>document.getElementById('lerr').classList.add('show'));
 }
 
-function doSignup(){
-  const u=document.getElementById('su').value.trim(), p=document.getElementById('sp').value, p2=document.getElementById('sp2').value, users=getUsers();
+async function doSignup(){
+  if(!auth){document.getElementById('auth-help').innerText='Firebase is not configured yet. Replace the placeholder values in index.html first.';return;}
+  const u=document.getElementById('su').value.trim(), p=document.getElementById('sp').value, p2=document.getElementById('sp2').value;
   const team=document.getElementById('steam').value.trim()||'My Team';
   let ok=true;
-  if(users[u]){document.getElementById('suerr').classList.add('show');ok=false;}
   if(p!==p2){document.getElementById('sperr').classList.add('show');ok=false;}
   if(!ok||!u||!p)return;
-  users[u]={password:p,team}; saveUsers(users);
-  document.getElementById('lu').value=u; document.getElementById('lp').value=p;
-  switchTab('login'); doLogin();
+  document.getElementById('suerr').classList.remove('show');
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(u,p);
+    await cred.user.updateProfile({displayName:team});
+    localStorage.setItem(`cm_team_${cred.user.uid}`,team);
+    document.getElementById('lu').value=u; document.getElementById('lp').value=p;
+    document.getElementById('auth-help').innerText='Account created. You are now signed in with Firebase Auth.';
+    switchTab('login');
+  }catch(err){
+    document.getElementById('suerr').classList.add('show');
+  }
 }
 
 function doLogout(){
-  currentUser=null; teamName='My Team'; allShots=[]; savedSessions={}; players=[]; playerFilter='ALL'; filterMode='myteam';
-  document.getElementById('auth-screen').classList.remove('hidden');
-  updateUI();
+  if(!auth){document.getElementById('auth-screen').classList.remove('hidden');updateUI();return;}
+  auth.signOut();
 }
 
 // -- PLAYERS ------------------------------------------------------------------
@@ -225,14 +269,14 @@ function addPlayer(){
   const inp=document.getElementById('new-player'), name=inp.value.trim();
   if(!name||players.includes(name))return;
   players.push(name); inp.value='';
-  localStorage.setItem(pKey(),JSON.stringify(players));
+  if(currentUser) localStorage.setItem(pKey(),JSON.stringify(players));
   renderPlayerList(); refreshPlayerSelects(); updatePlayerFilterBar();
 }
 
 function removePlayer(name){
   players=players.filter(p=>p!==name);
   if(playerFilter===name)playerFilter='ALL';
-  localStorage.setItem(pKey(),JSON.stringify(players));
+  if(currentUser) localStorage.setItem(pKey(),JSON.stringify(players));
   renderPlayerList(); refreshPlayerSelects(); updatePlayerFilterBar(); updateUI();
 }
 
