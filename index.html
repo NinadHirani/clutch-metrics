@@ -22,41 +22,113 @@ body{background:#020617;color:#f1f5f9;font-family:'Inter',sans-serif;min-height:
 #auth-screen{display:flex;position:fixed;inset:0;background:#020617;z-index:200;align-items:center;justify-content:center}
 #auth-screen.hidden{display:none}
 .auth-tab.active{background:#0ea5e9;color:#000}
-.inp{width:100%;background:#0f172a;border:1px solid #334155;padding:12px 16px;border-radius:12px;outline:none;color:#f1f5f9;transition:border-color .2s;font-family:'Inter',sans-serif}
-.inp:focus{border-color:#0ea5e9}
+.inp{width:100%;background:#0f172a;border:2px solid #475569;padding:12px 16px;border-radius:12px;outline:none;color:#f1f5f9;transition:all .2s;font-family:'Inter',sans-serif;font-size:14px}
+.inp:focus{border-color:#0ea5e9;box-shadow:0 0 12px rgba(14,165,233,.3)}
+.inp::placeholder{color:#64748b;opacity:0.7}
 .err{color:#f43f5e;font-size:12px;margin-top:4px;display:none}
 .err.show{display:block}
 footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
+@keyframes float{0%,100%{transform:translateY(0px);opacity:1}50%{transform:translateY(-16px);opacity:0.95}}
+.float-card{animation:float 3s ease-in-out infinite}
+.float-card:nth-child(2){animation-delay:0.5s}
 </style>
 </head>
 <body class="p-4 lg:p-8">
 
 <!-- AUTH -->
-<div id="auth-screen">
-<div class="glass p-8 rounded-[2.5rem] w-full max-w-md shadow-2xl shadow-sky-500/10">
-<div class="text-center mb-8">
-<h1 class="text-3xl font-black tracking-tighter text-sky-400 uppercase">Clutch Metrics</h1>
-<p class="text-slate-500 text-sm font-mono mt-1">Tactical Pro Dashboard</p>
+<div id="auth-screen" class="flex items-center justify-center w-full min-h-screen px-4">
+<div class="w-full max-w-7xl grid grid-cols-12 gap-8 lg:gap-16 items-center">
+<!-- HERO SECTION -->
+<div class="col-span-12 md:col-span-12 lg:col-span-6 flex items-center justify-center">
+<div class="w-full h-80 lg:h-screen lg:max-h-[90vh] flex flex-col items-center justify-center relative">
+<!-- Hero Background with Court Lines -->
+<div class="absolute inset-0 rounded-3xl lg:rounded-2xl glass overflow-hidden -z-10">
+<div class="absolute inset-0" style="background-image: linear-gradient(rgba(15,23,42,.7) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,.7) 1px, transparent 1px); background-size: 40px 40px;"></div>
+<div class="absolute inset-0" style="background: radial-gradient(circle at 60% 40%, rgba(14,165,233,.15) 0%, rgba(14,165,233,0) 70%);"></div>
 </div>
-<p id="auth-help" class="text-xs text-slate-500 mb-4 text-center">Sign in with Firebase Auth using your email and password.</p>
+<!-- Hero Content -->
+<div class="relative z-10 text-center space-y-8 px-6">
+<h1 class="text-5xl lg:text-7xl font-black tracking-tighter text-sky-400 uppercase leading-tight">CLUTCH<br>METRICS</h1>
+<p class="text-xl lg:text-2xl font-mono tracking-widest text-sky-300 uppercase italic">Pressure Creates Legends</p>
+<!-- Floating Metric Cards -->
+<div class="grid grid-cols-2 gap-4 mt-8">
+<div class="float-card glass p-4 rounded-2xl text-center backdrop-blur-md border border-emerald-500/30">
+<p class="text-xs text-slate-400 uppercase font-bold mb-2 tracking-widest">Goals</p>
+<h2 id="hero-goals" class="text-4xl font-black text-emerald-400">0</h2>
+</div>
+<div class="float-card glass p-4 rounded-2xl text-center backdrop-blur-md border border-sky-500/30">
+<p class="text-xs text-slate-400 uppercase font-bold mb-2 tracking-widest">On Target</p>
+<h2 id="hero-target" class="text-4xl font-black text-sky-400">0</h2>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- LOGIN FORM SECTION -->
+<div class="col-span-12 md:col-span-12 lg:col-span-6 flex items-center justify-center">
+<div class="w-full max-w-md glass p-8 rounded-3xl shadow-2xl shadow-sky-500/10">
+<div class="mb-6">
+<h2 class="text-2xl font-black tracking-tighter text-sky-400 uppercase">Enter The Game</h2>
+<p id="auth-help" class="text-xs text-slate-500 mt-2">Sign in with your email and password.</p>
+</div>
 <div class="flex bg-slate-800 p-1 rounded-xl border border-white/10 mb-6">
 <button onclick="switchTab('login')" id="tab-login" class="auth-tab flex-1 px-4 py-2 rounded-lg text-xs font-bold transition active uppercase">Login</button>
 <button onclick="switchTab('signup')" id="tab-signup" class="auth-tab flex-1 px-4 py-2 rounded-lg text-xs font-bold transition uppercase">Sign Up</button>
 </div>
+<!-- LOGIN FORM -->
 <div id="form-login" class="space-y-4">
-<input id="lu" type="email" class="inp" placeholder="Email address">
- <div><input id="lp" type="password" class="inp" placeholder="Password"><p id="lerr" class="err">Invalid email or password.</p></div>
- <button onclick="doLogin()" class="w-full bg-sky-500 hover:bg-sky-400 text-black py-3 rounded-xl font-black text-sm uppercase shadow-lg shadow-sky-500/30">Login</button>
- </div>
- <div id="form-signup" class="space-y-4 hidden">
- <div><input id="su" type="email" class="inp" placeholder="Email address"><p id="suerr" class="err">Email already in use.</p></div>
- <input id="steam" class="inp" placeholder="Team Name (e.g. CB South, Lincoln FC)">
- <input id="sp" type="password" class="inp" placeholder="Choose Password">
- <div><input id="sp2" type="password" class="inp" placeholder="Confirm Password"><p id="sperr" class="err">Passwords do not match.</p></div>
-<button onclick="doSignup()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black text-sm uppercase shadow-lg shadow-emerald-500/30">Create Account</button>
- </div>
- </div>
- </div>
+<div>
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Email</label>
+<input id="lu" type="email" class="inp" placeholder="your@email.com">
+</div>
+<div>
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Password</label>
+<input id="lp" type="password" class="inp" placeholder="••••••••">
+<p id="lerr" class="err">Invalid email or password.</p>
+</div>
+<div class="flex items-center space-x-2">
+<input id="lrem" type="checkbox" class="w-4 h-4 accent-sky-500 rounded cursor-pointer">
+<label for="lrem" class="text-xs text-slate-400 cursor-pointer">Remember me</label>
+</div>
+<button onclick="doLogin()" class="w-full bg-sky-500 hover:bg-sky-400 text-black py-3 rounded-xl font-black text-sm uppercase shadow-lg shadow-sky-500/30 transition">Enter The Game</button>
+<div class="relative py-4">
+<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-700"></div></div>
+<div class="relative flex justify-center text-xs"><span class="px-2 bg-slate-900 text-slate-500">or</span></div>
+</div>
+<button onclick="doLoginGoogle()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl font-bold text-sm uppercase shadow-lg shadow-slate-700/30 transition flex items-center justify-center gap-2">
+<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+Continue with Google
+</button>
+<p class="text-xs text-slate-500 text-center mt-4">Don't have an account? <button onclick="switchTab('signup')" class="text-sky-400 hover:text-sky-300 font-bold">Sign up</button></p>
+</div>
+<!-- SIGNUP FORM -->
+<div id="form-signup" class="space-y-4 hidden">
+<div>
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Email</label>
+<input id="su" type="email" class="inp" placeholder="your@email.com">
+<p id="suerr" class="err">Email already in use.</p>
+</div>
+<div>
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Team Name</label>
+<input id="steam" class="inp" placeholder="e.g. CB South, Lincoln FC">
+</div>
+<div>
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Password</label>
+<input id="sp" type="password" class="inp" placeholder="••••••••">
+</div>
+<div>
+<label class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Confirm Password</label>
+<input id="sp2" type="password" class="inp" placeholder="••••••••">
+<p id="sperr" class="err">Passwords do not match.</p>
+</div>
+<button onclick="doSignup()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black text-sm uppercase shadow-lg shadow-emerald-500/30 transition">Create Account</button>
+<p class="text-xs text-slate-500 text-center">Already have an account? <button onclick="switchTab('login')" class="text-sky-400 hover:text-sky-300 font-bold">Login</button></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 
 <!-- APP -->
 <div class="max-w-[1500px] mx-auto flex-1">
@@ -239,6 +311,12 @@ function doLogin(){
   auth.signInWithEmailAndPassword(email,password).catch(()=>document.getElementById('lerr').classList.add('show'));
 }
 
+function doLoginGoogle(){
+  if(!auth){console.log('Firebase not configured');return;}
+  const provider=new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err=>console.log('Google login error:',err.message));
+}
+
 async function doSignup(){
   if(!auth){document.getElementById('auth-help').innerText='Firebase is not configured yet. Replace the placeholder values in index.html first.';return;}
   const u=document.getElementById('su').value.trim(), p=document.getElementById('sp').value, p2=document.getElementById('sp2').value;
@@ -370,6 +448,8 @@ function updateUI(){
   document.getElementById('kpi-target').innerText=target;
   document.getElementById('kpi-goals').innerText=goals;
   document.getElementById('kpi-conv').innerText=data.length?Math.round(goals/data.length*100)+'%':'0%';
+  document.getElementById('hero-goals').innerText=goals;
+  document.getElementById('hero-target').innerText=target;
   const filterLabel=filterMode==='myteam'?teamName:filterMode;
   document.getElementById('filter-status').innerText=`Showing: ${filterLabel}${playerFilter!=='ALL'?' · '+playerFilter:''}`;
 
