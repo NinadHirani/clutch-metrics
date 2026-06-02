@@ -776,8 +776,8 @@ if(firebaseReady){
   auth=firebase.auth();
   db=firebase.firestore();
   
-  // Enable offline persistence for better cache resilience
-  db.enablePersistence().catch(err => {
+  // Enable multi-tab offline persistence to prevent locking delays across concurrent browser sessions
+  db.enablePersistence({synchronizeTabs: true}).catch(err => {
     console.warn("Firestore offline persistence not enabled:", err.code);
   });
 
