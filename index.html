@@ -933,6 +933,19 @@ function showLoading(show, customMessage = null) {
 // Start the loader immediately on script parse
 showLoading(true);
 
+// Safety timeout: if loading screen is still visible after 12 seconds, force-hide it
+setTimeout(() => {
+  const ls = document.getElementById('loading-screen');
+  if (ls && !ls.classList.contains('hidden')) {
+    console.warn('Loading screen safety timeout triggered after 12s');
+    showLoading(false);
+    // If no user is logged in, show the auth screen
+    if (!currentUser) {
+      document.getElementById('auth-screen').classList.remove('hidden');
+    }
+  }
+}, 12000);
+
 // -- APPLICATION STATE VARIABLES ----------------------------------------------
 let currentUser=null, currentEmail='', teamName='My Team', allShots=[], filterMode='myteam', savedSessions={}, players=[], playerFilter='ALL', tChart, lChart, oChart;
 
@@ -984,19 +997,7 @@ if(firebaseReady){
       console.warn("Firestore persistence failed synchronously:", e);
     }
 
-    // Handle Google Redirect Auth defensively on page load
-    try {
-      auth.getRedirectResult().then(result => {
-        if (result && result.user) {
-          showToast(`Google Sign-In successful!`, 'ok');
-        }
-      }).catch(err => {
-        console.error("Google Redirect Auth Error:", err);
-        showToast(`Google Sign-In failed: ${err.message}`, 'warn');
-      });
-    } catch (e) {
-      console.error("Google Redirect handler failed synchronously:", e);
-    }
+    // Note: Google auth now uses popup flow (not redirect), so no getRedirectResult() needed.
 
     auth.onAuthStateChanged(user=>{
       if(user){
@@ -1165,10 +1166,22 @@ function doLogin(){
 function doLoginGoogle(){
   if(!auth){showToast('Firebase not initialized.', 'warn');return;}
   const provider=new firebase.auth.GoogleAuthProvider();
-  showLoading(true, "Redirecting to Google Secure Login...");
-  auth.signInWithRedirect(provider).catch(err=>{
+  showLoading(true, "Authenticating with Google...");
+  auth.signInWithPopup(provider).then(result => {
+    if (result && result.user) {
+      showToast('Google Sign-In successful!', 'ok');
+    }
+    // onAuthStateChanged will handle the rest (loading data + hiding loading screen)
+  }).catch(err => {
     showLoading(false);
-    showToast('Google auth error: '+err.message, 'warn');
+    console.error('Google popup auth error:', err);
+    if (err.code === 'auth/popup-closed-by-user') {
+      showToast('Sign-in cancelled.', 'info');
+    } else if (err.code === 'auth/popup-blocked') {
+      showToast('Popup blocked by browser. Please allow popups for this site.', 'warn');
+    } else {
+      showToast('Google auth error: ' + err.message, 'warn');
+    }
   });
 }
 
