@@ -1,542 +1,680 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clutch Metrics | Tactical Pro</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clutch Metrics | Halftime Tactical Hub</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@300;400;500;700;900&display=swap');
-body{background:#020617;color:#f1f5f9;font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
-.glass{background:rgba(15,23,42,0.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08)}
-.glow-box-sky{box-shadow:0 0 40px -10px rgba(14,165,233,0.25)}
-.glow-box-emerald{box-shadow:0 0 40px -10px rgba(16,185,129,0.2)}
-.pitch{background:#0f172a;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:30px 30px;position:relative;aspect-ratio:68/105;width:100%;border:2px solid #334155;border-radius:4px}
-.pitch-line{border:1px solid rgba(255,255,255,.2);position:absolute;pointer-events:none}
-.shot-dot{position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);z-index:20;transition:scale .2s;cursor:pointer}
-.shot-dot:hover{scale:1.5;z-index:30}
-.filter-btn.active,.pf-btn.active{background:#0ea5e9;color:#000}
-.pf-btn.active{background:#8b5cf6;color:#fff}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:100;align-items:center;justify-content:center}
-.modal.active{display:flex}
-#auth-screen{display:flex;position:fixed;inset:0;background:#020617;z-index:200;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch}
+:root{
+  --sky:#0ea5e9;--emerald:#10b981;--violet:#8b5cf6;--rose:#f43f5e;
+  --amber:#f59e0b;--slate-900:#0f172a;--bg:#020813;
+  --glass-bg:rgba(7,14,30,0.65);--glass-border:rgba(255,255,255,0.06);
+  --card-bg:rgba(10,20,42,0.7);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:#e2e8f0;font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 70% 45% at 20% 0%,rgba(14,165,233,0.09) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 35% at 85% 100%,rgba(16,185,129,0.07) 0%,transparent 60%),
+  radial-gradient(ellipse 40% 50% at 50% 50%,rgba(139,92,246,0.04) 0%,transparent 70%);
+pointer-events:none;z-index:0}
+
+/* MESH GRID OVERLAY */
+body::after{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0}
+
+.z1{position:relative;z-index:1}
+
+/* GLASSMORPHIC CONTAINER */
+.glass{background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border)}
+.card{background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:24px;transition:border-color 0.25s,box-shadow 0.25s}
+.card:hover{border-color:rgba(14,165,233,0.12)}
+
+/* BLUR EFFECTS */
+.glow-sky{box-shadow:0 0 50px -10px rgba(14,165,233,0.2)}
+.glow-emerald{box-shadow:0 0 50px -10px rgba(16,185,129,0.15)}
+.glow-violet{box-shadow:0 0 50px -10px rgba(139,92,246,0.15)}
+
+/* TYPOGRAPHY */
+.display{font-family:'Bebas Neue',sans-serif;letter-spacing:0.04em}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* AUTH BACKGROUND SCREEN */
+#auth-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:24px}
 #auth-screen.hidden{display:none}
-.auth-tab{transition:all .3s cubic-bezier(0.4, 0, 0.2, 1)}
-.auth-tab.active{background:#0ea5e9;color:#020617;box-shadow:0 4px 12px rgba(14,165,233,0.25)}
-.inp{width:100%;background:rgba(15,23,42,0.6);border:1px solid rgba(71,85,105,0.4);padding:12px 16px;border-radius:12px;outline:none;color:#f1f5f9;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);font-family:'Inter',sans-serif;font-size:14px}
-.inp:focus{border-color:#0ea5e9;background:rgba(15,23,42,0.85);box-shadow:0 0 16px rgba(14,165,233,0.25)}
-.inp::placeholder{color:#64748b;opacity:0.7}
-.err{color:#f43f5e;font-size:12px;margin-top:4px;display:none}
+
+/* FORMS AND INPUTS */
+.inp{width:100%;background:rgba(5,10,25,0.75);border:1px solid rgba(255,255,255,0.08);padding:12px 16px;border-radius:12px;outline:none;color:#f1f5f9;transition:all 0.25s;font-family:'DM Sans',sans-serif;font-size:14px}
+.inp:focus{border-color:var(--sky);background:rgba(5,10,25,0.9);box-shadow:0 0 0 3px rgba(14,165,233,0.15)}
+.inp option{background:#040c1a;color:#f1f5f9}
+.err{color:#f43f5e;font-size:11px;margin-top:4px;display:none;font-family:'JetBrains Mono',monospace}
 .err.show{display:block}
-footer{border-top:1px solid rgba(255,255,255,.05);background:rgba(15,23,42,.8)}
-@keyframes float{0%,100%{transform:translateY(0px);opacity:1}50%{transform:translateY(-16px);opacity:0.95}}
-.float-card{animation:float 3.5s ease-in-out infinite}
-.float-card:nth-child(2){animation-delay:0.75s}
 
-/* === 3D SOCCER BALL === */
-.ball-scene{perspective:800px;width:160px;height:160px}
-.ball-scene-sm{perspective:500px;width:52px;height:52px}
-.soccer-ball{
-  width:100%;height:100%;position:relative;
-  transform-style:preserve-3d;
-  animation:spinBall 8s linear infinite;
+/* BUTTON CONTROLS */
+.btn-primary{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#000;padding:12px 24px;border-radius:12px;font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.08em;transition:all .2s;cursor:pointer;border:none;box-shadow:0 4px 20px rgba(14,165,233,0.25)}
+.btn-primary:hover{transform:translateY(-1.5px);box-shadow:0 8px 30px rgba(14,165,233,0.4)}
+.btn-emerald{background:linear-gradient(135deg,#10b981,#059669);color:#000;padding:12px 24px;border-radius:12px;font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.08em;transition:all .2s;cursor:pointer;border:none;box-shadow:0 4px 20px rgba(16,185,129,0.2)}
+.btn-emerald:hover{transform:translateY(-1.5px);box-shadow:0 8px 30px rgba(16,185,129,0.3)}
+
+/* INTERACTIVE TAB PANEL */
+.auth-tab{transition:all .25s;padding:10px 20px;border-radius:10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;border:none;background:transparent;color:#64748b}
+.auth-tab.active{background:var(--sky);color:#020813;box-shadow:0 4px 15px rgba(14,165,233,0.25)}
+
+/* FILTER OPTION BUTTONS */
+.filter-btn{padding:8px 18px;border-radius:10px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;border:none;background:transparent;color:#64748b;transition:all .2s}
+.filter-btn.active{background:var(--sky);color:#000;box-shadow:0 2px 10px rgba(14,165,233,0.2)}
+.pf-btn{padding:6px 14px;border-radius:8px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#64748b;transition:all .2s}
+.pf-btn.active{background:var(--violet);color:#fff;border-color:var(--violet);box-shadow:0 2px 10px rgba(139,92,246,0.2)}
+
+/* SPATIAL FIELD VISUALIZATION */
+.pitch{background:linear-gradient(180deg,#042211 0%,#053625 30%,#044430 50%,#053625 70%,#042211 100%);position:relative;aspect-ratio:68/105;width:100%;max-width:260px;margin:0 auto;border:2px solid rgba(16,185,129,0.35);border-radius:8px;overflow:hidden;box-shadow:0 15px 35px rgba(0,0,0,0.5)}
+.pitch::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(180deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 12px,transparent 12px,transparent 24px)}
+.pitch-line{border:1px solid rgba(255,255,255,0.18);position:absolute;pointer-events:none}
+.shot-dot{position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);z-index:20;transition:transform .15s,box-shadow 0.15s;cursor:pointer}
+.shot-dot:hover{transform:translate(-50%,-50%) scale(1.6);z-index:30}
+
+/* DIALOG MODAL LAYOUT */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px}
+.modal.active{display:flex}
+
+/* KPI DASHBOARD BLOCKS */
+.kpi-card{background:var(--card-bg);border:1px solid var(--glass-border);border-radius:20px;padding:20px 16px;text-align:center;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(0,0,0,0.3)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi-card.k-total::before{background:linear-gradient(90deg,var(--sky),transparent)}
+.kpi-card.k-target::before{background:linear-gradient(90deg,var(--violet),transparent)}
+.kpi-card.k-goals::before{background:linear-gradient(90deg,var(--emerald),transparent)}
+.kpi-card.k-conv::before{background:linear-gradient(90deg,var(--amber),transparent)}
+
+/* AI PERFORMANCE INTEL BOX */
+.ai-insight{background:linear-gradient(135deg,rgba(14,165,233,0.06),rgba(139,92,246,0.04));border:1px solid rgba(14,165,233,0.15);border-radius:16px;padding:16px;position:relative;overflow:hidden}
+.ai-insight::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;background:radial-gradient(circle,rgba(14,165,233,0.1),transparent 70%);pointer-events:none}
+
+/* RADIAL SCAN LINE ANIMATION */
+@keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(300%)}}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(14,165,233,0.35),transparent);animation:scan 4s linear infinite;pointer-events:none}
+
+/* FLOATING PULSE KEYFRAMES */
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.25)}}
+.pulse-dot{animation:pulseDot 2s ease-in-out infinite}
+
+/* LABELS AND BADGES */
+.badge-sky{background:rgba(14,165,233,0.1);color:var(--sky);border:1px solid rgba(14,165,233,0.22);padding:2px 10px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.badge-emerald{background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.22);padding:2px 10px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.badge-rose{background:rgba(244,63,94,0.1);color:var(--rose);border:1px solid rgba(244,63,94,0.22);padding:2px 10px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.badge-violet{background:rgba(139,92,246,0.1);color:var(--violet);border:1px solid rgba(139,92,246,0.22);padding:2px 10px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+
+/* TOP PERFORMERS */
+.player-card{background:rgba(10,18,38,0.7);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:12px;transition:all .2s}
+.player-card:hover{border-color:rgba(14,165,233,0.22);background:rgba(14,165,233,0.04);transform:translateX(2px)}
+.player-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;flex-shrink:0}
+
+/* COMPLEX ORBIT RING ANIMATIONS */
+@keyframes orbit{0%{transform:translate(-50%,-50%) rotate(0deg)}100%{transform:translate(-50%,-50%) rotate(360deg)}}
+.orbit-ring{position:absolute;border-radius:50%;border:1px dashed rgba(14,165,233,0.12);animation:orbit 24s linear infinite}
+.orbit-dot{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--sky);box-shadow:0 0 10px var(--sky);top:-3px;left:50%}
+.orbit-dot-2{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--emerald);box-shadow:0 0 8px var(--emerald);bottom:-2px;right:20%}
+
+/* 3D PERSPECTIVE INTERACTIVE PITCH */
+.pitch-3d-scene{perspective:800px}
+.pitch-3d{width:220px;height:165px;position:relative;transform:rotateX(55deg) rotateZ(-5deg);transform-style:preserve-3d;animation:pitchHover 5s ease-in-out infinite}
+@keyframes pitchHover{0%,100%{transform:rotateX(55deg) rotateZ(-5deg) translateY(0)}50%{transform:rotateX(55deg) rotateZ(-5deg) translateY(-8px)}}
+.pitch-3d-surface{position:absolute;inset:0;background:linear-gradient(180deg,#05301a 0%,#064d37 25%,#046b4c 50%,#064d37 75%,#05301a 100%);border:2px solid #10b981;border-radius:6px;box-shadow:0 24px 50px rgba(0,0,0,0.55),0 0 35px rgba(16,185,129,0.2)}
+.pitch-3d-surface::before{content:'';position:absolute;inset:8px;border:1px solid rgba(255,255,255,0.22);border-radius:4px}
+.pitch-3d-surface::after{content:'';position:absolute;top:50%;left:8px;right:8px;height:1px;background:rgba(255,255,255,0.22)}
+.pitch-3d-circle{position:absolute;top:50%;left:50%;width:38px;height:38px;border:1px solid rgba(255,255,255,0.22);border-radius:50%;transform:translate(-50%,-50%)}
+.pitch-3d-center{position:absolute;top:50%;left:50%;width:4px;height:4px;background:#10b981;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 8px #10b981}
+.pitch-3d-box-top{position:absolute;top:8px;left:50%;width:58px;height:18px;border:1px solid rgba(255,255,255,0.22);border-top:none;transform:translateX(-50%)}
+.pitch-3d-box-bottom{position:absolute;bottom:8px;left:50%;width:58px;height:18px;border:1px solid rgba(255,255,255,0.22);border-bottom:none;transform:translateX(-50%)}
+.pitch-3d-shot{position:absolute;width:6px;height:6px;border-radius:50%;box-shadow:0 0 8px currentColor;animation:shotPulse 2s ease-in-out infinite}
+@keyframes shotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.35)}}
+
+/* 3D SPINNING SOCCER BALL SVG */
+@keyframes spinBall{0%{transform:rotateY(0deg) rotateX(12deg)}100%{transform:rotateY(360deg) rotateX(12deg)}}
+.ball-wrap{perspective:600px;width:110px;height:110px;flex-shrink:0}
+.ball-3d{width:100%;height:100%;animation:spinBall 8s linear infinite;transform-style:preserve-3d}
+.ball-svg{filter:drop-shadow(0 0 25px rgba(14,165,233,0.35)) drop-shadow(0 8px 20px rgba(0,0,0,0.55))}
+.ball-glow{position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(14,165,233,0.14);animation:pulseGlow 3.5s ease-in-out infinite}
+@keyframes pulseGlow{0%,100%{opacity:0.35;transform:scale(1)}50%{opacity:0.75;transform:scale(1.06)}}
+
+/* GLOWING SCROLLBARS */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:rgba(255,255,255,.02)}
+::-webkit-scrollbar-thumb{background:rgba(14,165,233,0.25);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(14,165,233,0.45)}
+
+/* SHIMMER LOADING PLACEHOLDER */
+@keyframes shimmer{0%{background-position:-300px 0}100%{background-position:300px 0}}
+.shimmer{background:linear-gradient(90deg,rgba(255,255,255,0.02) 25%,rgba(255,255,255,0.06) 50%,rgba(255,255,255,0.02) 75%);background-size:600px 100%;animation:shimmer 2.2s infinite}
+
+/* TYPING DOTS LOADING EFFECT */
+@keyframes typingDot{0%,80%,100%{opacity:0;transform:scale(0.6)}40%{opacity:1;transform:scale(1)}}
+.typing-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--sky);animation:typingDot 1.4s ease-in-out infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+
+footer{border-top:1px solid rgba(255,255,255,.04)}
+
+/* RESPONSIVE DESIGN PATTERNS */
+.app-pad{padding:24px;max-width:1600px;margin:0 auto}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.main-grid{display:grid;grid-template-columns:1fr 350px;gap:20px;align-items:start}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.top-players-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:1024px){
+  .main-grid{grid-template-columns:1fr}
 }
-.soccer-ball-sm{
-  width:100%;height:100%;position:relative;
-  transform-style:preserve-3d;
-  animation:spinBall 6s linear infinite;
-}
-@keyframes spinBall{
-  0%{transform:rotateY(0deg) rotateX(10deg)}
-  100%{transform:rotateY(360deg) rotateX(10deg)}
-}
-.ball-svg{
-  width:100%;height:100%;
-  filter:drop-shadow(0 0 30px rgba(14,165,233,0.3)) drop-shadow(0 8px 20px rgba(0,0,0,0.4));
-}
-/* Ball glow ring */
-.ball-glow{
-  position:absolute;inset:-14px;border-radius:50%;
-  border:1px solid rgba(14,165,233,0.15);
-  animation:pulseGlow 3s ease-in-out infinite;
-}
-@keyframes pulseGlow{
-  0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.8;transform:scale(1.08)}
+@media(max-width:680px){
+  .app-pad{padding:14px}
+  .top-bar{padding:12px 16px;flex-direction:column;align-items:stretch;gap:12px}
+  .top-bar > div:last-child{justify-content:center}
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi-card h2{font-size:36px !important}
+  .charts-grid{grid-template-columns:1fr}
+  .top-players-grid{grid-template-columns:1fr}
+  #pf-bar{padding:10px 16px}
+  .modal{padding:8px}
+  .display{letter-spacing:.02em}
 }
 
-/* === 3D MINI PITCH === */
-.pitch-3d-scene{perspective:600px}
-.pitch-3d{
-  width:220px;height:160px;position:relative;
-  transform:rotateX(55deg) rotateZ(-5deg);
-  transform-style:preserve-3d;
-  animation:pitchHover 4s ease-in-out infinite;
-}
-@keyframes pitchHover{
-  0%,100%{transform:rotateX(55deg) rotateZ(-5deg) translateY(0px)}
-  50%{transform:rotateX(55deg) rotateZ(-5deg) translateY(-8px)}
-}
-.pitch-3d-surface{
-  position:absolute;inset:0;
-  background:linear-gradient(180deg,#064e3b 0%,#065f46 25%,#047857 50%,#065f46 75%,#064e3b 100%);
-  border:2px solid #10b981;
-  border-radius:4px;
-  box-shadow:0 20px 40px rgba(0,0,0,0.5),0 0 30px rgba(16,185,129,0.15);
-}
-/* Field lines */
-.pitch-3d-surface::before{
-  content:'';position:absolute;inset:8px;
-  border:1px solid rgba(255,255,255,0.3);
-  border-radius:2px;
-}
-.pitch-3d-surface::after{
-  content:'';position:absolute;
-  top:50%;left:8px;right:8px;height:1px;
-  background:rgba(255,255,255,0.3);
-}
-.pitch-3d-circle{
-  position:absolute;top:50%;left:50%;
-  width:40px;height:40px;
-  border:1px solid rgba(255,255,255,0.25);
-  border-radius:50%;
-  transform:translate(-50%,-50%);
-}
-.pitch-3d-center{
-  position:absolute;top:50%;left:50%;
-  width:4px;height:4px;
-  background:#10b981;
-  border-radius:50%;
-  transform:translate(-50%,-50%);
-  box-shadow:0 0 8px #10b981;
-}
-/* Goal boxes */
-.pitch-3d-box-top{
-  position:absolute;top:8px;left:50%;
-  width:60px;height:20px;
-  border:1px solid rgba(255,255,255,0.25);
-  border-top:none;
-  transform:translateX(-50%);
-}
-.pitch-3d-box-bottom{
-  position:absolute;bottom:8px;left:50%;
-  width:60px;height:20px;
-  border:1px solid rgba(255,255,255,0.25);
-  border-bottom:none;
-  transform:translateX(-50%);
-}
-/* Goal post (3D extruded) */
-.goal-post{
-  position:absolute;left:50%;bottom:-2px;
-  width:40px;height:6px;
-  transform:translateX(-50%) translateZ(12px);
-  transform-style:preserve-3d;
-}
-.goal-post-bar{
-  position:absolute;inset:0;
-  background:linear-gradient(90deg,#e2e8f0,#f8fafc,#e2e8f0);
-  border-radius:2px;
-  box-shadow:0 0 10px rgba(255,255,255,0.3);
-}
+/* INTERACTIVE HUD TOASTS */
+#toast-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:rgba(5,10,25,0.95);backdrop-filter:blur(12px);border:1px solid rgba(14,165,233,0.3);color:#e2e8f0;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;box-shadow:0 12px 40px rgba(0,0,0,0.5);animation:toastIn .3s ease-out;display:flex;align-items:center;gap:10px}
+.toast.ok{border-color:rgba(16,185,129,0.45)}
+.toast.warn{border-color:rgba(244,63,94,0.45)}
+.toast.info{border-color:rgba(139,92,246,0.45)}
+@keyframes toastIn{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(25px)}}
 
-/* 3D shot marker on the pitch */
-.pitch-3d-shot{
-  position:absolute;width:6px;height:6px;border-radius:50%;
-  transform:translateZ(4px);
-  box-shadow:0 0 8px currentColor;
-  animation:shotPulse 2s ease-in-out infinite;
-}
-@keyframes shotPulse{
-  0%,100%{opacity:1;transform:translateZ(4px) scale(1)}
-  50%{opacity:0.7;transform:translateZ(8px) scale(1.3)}
-}
+/* INTERACTIVE LIVE TELEMETRY DOT */
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.live-dot{width:7px;height:7px;background:#10b981;border-radius:50%;animation:livePulse 1.5s ease-in-out infinite;box-shadow:0 0 8px #10b981}
 
-/* === ORBIT RING === */
-.orbit-ring{
-  position:absolute;border-radius:50%;
-  border:1px dashed rgba(14,165,233,0.12);
-  animation:orbitSpin 20s linear infinite;
-}
-@keyframes orbitSpin{0%{transform:translate(-50%,-50%) rotate(0deg)}100%{transform:translate(-50%,-50%) rotate(360deg)}}
-.orbit-dot{
-  position:absolute;width:5px;height:5px;border-radius:50%;background:#0ea5e9;
-  box-shadow:0 0 10px #0ea5e9;
-  top:-2px;left:50%;
-}
-.orbit-dot-2{
-  position:absolute;width:4px;height:4px;border-radius:50%;background:#10b981;
-  box-shadow:0 0 8px #10b981;
-  bottom:-2px;right:20%;
-}
+/* MISTAKE TRACKER BADGES */
+.mistake-flag{background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.28);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:800;color:var(--rose);font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+
+.section-header{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#475569;font-family:'JetBrains Mono',monospace;margin-bottom:12px}
+.toggle-wrap{display:flex;background:rgba(5,10,25,0.85);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:4px;gap:2px}
+.top-bar{background:rgba(2,8,19,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.05);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.chart-wrap{position:relative;width:100%;height:220px}
 </style>
 </head>
-<body class="p-4 lg:p-8">
+<body>
 
-<!-- AUTH -->
-<div id="auth-screen" class="fixed inset-0 z-[200] overflow-y-auto bg-[#020617] flex items-start justify-center p-4 py-8 sm:p-6 sm:py-12 md:p-10 md:py-16 lg:items-center lg:py-10">
-  <!-- Glowing Background Blur Orbs -->
-  <div class="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] sm:w-[500px] sm:h-[500px] rounded-full bg-sky-500/10 blur-[80px] sm:blur-[120px] pointer-events-none -z-10 animate-[pulse_6s_ease-in-out_infinite]"></div>
-  <div class="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[280px] h-[280px] sm:w-[500px] sm:h-[500px] rounded-full bg-emerald-500/5 blur-[80px] sm:blur-[120px] pointer-events-none -z-10 animate-[pulse_8s_ease-in-out_infinite]"></div>
-  
-  <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center my-auto">
-    <!-- HERO SECTION (Adaptive: beautifully structured for larger displays, sleek presentation) -->
-    <div class="hidden lg:flex lg:col-span-6 xl:col-span-7 flex-col justify-center h-full min-h-[500px] relative pr-4">
-      <!-- Ambient Pitch Grid Card -->
-      <div class="absolute inset-0 rounded-3xl glass overflow-hidden -z-10 glow-box-sky">
-        <div class="absolute inset-0 opacity-15" style="background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 40px 40px;"></div>
-        <div class="absolute inset-0" style="background: radial-gradient(circle at 50% 50%, rgba(14,165,233,0.12) 0%, rgba(14,165,233,0) 70%);"></div>
-        <!-- Orbit Rings -->
-        <div class="orbit-ring" style="width:320px;height:320px;top:50%;left:50%">
+<!-- ======== HUD TOAST DRAWER ======== -->
+<div id="toast-wrap"></div>
+
+<!-- ======== AUTH SCREEN ENTRANCE ======== -->
+<div id="auth-screen">
+  <!-- Glowing ambient elements -->
+  <div style="position:fixed;top:15%;left:15%;width:450px;height:450px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,0.08),transparent 70%);pointer-events:none;animation:pulseDot 7s ease-in-out infinite"></div>
+  <div style="position:fixed;bottom:15%;right:15%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,0.06),transparent 70%);pointer-events:none;animation:pulseDot 9s ease-in-out infinite 0.5s"></div>
+
+  <div style="width:100%;max-width:1150px;display:grid;grid-template-columns:1fr;gap:32px;position:relative;z-index:1" class="lg-grid">
+    <style>
+      .lg-grid{grid-template-columns:1fr}
+      @media(min-width:1024px){.lg-grid{grid-template-columns:1.2fr 1fr}}
+    </style>
+
+    <!-- LEFT INTRO COLUMN -->
+    <div style="display:none" class="hero-left" id="hero-left">
+      <style>@media(min-width:1024px){.hero-left{display:flex;flex-direction:column;justify-content:center;padding:24px}}</style>
+      <div class="glass glow-sky" style="border-radius:28px;padding:48px;height:100%;position:relative;overflow:hidden">
+        <div class="scan-line"></div>
+        <!-- Triple interactive orbit rings -->
+        <div class="orbit-ring" style="width:340px;height:340px;top:50%;left:50%">
           <div class="orbit-dot"></div>
           <div class="orbit-dot-2"></div>
         </div>
-        <div class="orbit-ring" style="width:460px;height:460px;top:50%;left:50%;animation-duration:30s;animation-direction:reverse;border-color:rgba(16,185,129,0.08)">
-          <div class="orbit-dot" style="background:#8b5cf6;box-shadow:0 0 10px #8b5cf6"></div>
+        <div class="orbit-ring" style="width:480px;height:480px;top:50%;left:50%;animation-duration:28s;animation-direction:reverse;border-color:rgba(16,185,129,0.08)">
+          <div class="orbit-dot" style="background:var(--violet);box-shadow:0 0 12px var(--violet)"></div>
         </div>
-      </div>
-      
-      <!-- Hero Content -->
-      <div class="relative z-10 p-8 xl:p-12">
-        <div class="flex items-start gap-8">
-          <!-- Text Content -->
-          <div class="flex-1 space-y-6">
-            <div class="space-y-4">
-              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-xs font-bold font-mono tracking-wider text-sky-400 uppercase">
-                <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span> Tactical Intel Platform
-              </div>
-              <h1 class="text-5xl xl:text-7xl font-black tracking-tighter text-sky-400 uppercase leading-none">
-                CLUTCH<br><span class="text-white">METRICS</span>
-              </h1>
-              <p class="text-base xl:text-lg font-mono tracking-widest text-sky-300/90 uppercase italic">Pressure Creates Legends</p>
-            </div>
-            
-            <p class="text-slate-400 max-w-sm text-sm leading-relaxed">
-              Unlock high-fidelity positional shot tracking, spatial analysis, and live game telemetry.
-            </p>
-          </div>
-          
-          <!-- 3D Soccer Ball -->
-          <div class="ball-scene shrink-0 relative" style="margin-top:20px">
-            <div class="ball-glow"></div>
-            <div class="soccer-ball">
-              <svg class="ball-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <radialGradient id="ballShade" cx="38%" cy="35%" r="65%">
-                    <stop offset="0%" stop-color="#ffffff"/>
-                    <stop offset="45%" stop-color="#e8ecf0"/>
-                    <stop offset="100%" stop-color="#8898a8"/>
-                  </radialGradient>
-                  <filter id="ballShadow"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3"/></filter>
-                </defs>
-                <circle cx="100" cy="100" r="96" fill="url(#ballShade)" stroke="#94a3b8" stroke-width="1.5"/>
-                <!-- Classic pentagon pattern -->
-                <polygon points="100,28 120,42 114,65 86,65 80,42" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-                <polygon points="148,72 168,90 160,114 138,118 128,96" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-                <polygon points="52,72 72,96 62,118 40,114 32,90" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-                <polygon points="68,148 90,138 110,138 132,148 120,172 80,172" fill="#1e293b" stroke="#334155" stroke-width="1"/>
-                <!-- Seam lines -->
-                <line x1="100" y1="28" x2="100" y2="4" stroke="#b0bec5" stroke-width="0.8" opacity="0.5"/>
-                <line x1="120" y1="42" x2="148" y2="72" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
-                <line x1="80" y1="42" x2="52" y2="72" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
-                <line x1="128" y1="96" x2="110" y2="138" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
-                <line x1="72" y1="96" x2="90" y2="138" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
-                <line x1="114" y1="65" x2="128" y2="96" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
-                <line x1="86" y1="65" x2="72" y2="96" stroke="#b0bec5" stroke-width="0.8" opacity="0.4"/>
-                <line x1="160" y1="114" x2="132" y2="148" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
-                <line x1="40" y1="114" x2="68" y2="148" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
-                <line x1="120" y1="172" x2="130" y2="194" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
-                <line x1="80" y1="172" x2="70" y2="194" stroke="#b0bec5" stroke-width="0.8" opacity="0.3"/>
-                <!-- Highlight -->
-                <circle cx="75" cy="55" r="18" fill="white" opacity="0.12"/>
-              </svg>
-            </div>
-          </div>
+        <div class="orbit-ring" style="width:220px;height:220px;top:50%;left:50%;animation-duration:15s;border-color:rgba(139,92,246,0.07)">
+          <div class="orbit-dot-2" style="background:var(--sky);box-shadow:0 0 10px var(--sky)"></div>
         </div>
 
-        <!-- 3D Mini Pitch -->
-        <div class="flex items-end gap-6 mt-8">
-          <div class="pitch-3d-scene shrink-0">
-            <div class="pitch-3d">
-              <div class="pitch-3d-surface">
-                <div class="pitch-3d-circle"></div>
-                <div class="pitch-3d-center"></div>
-                <div class="pitch-3d-box-top"></div>
-                <div class="pitch-3d-box-bottom"></div>
-                <div class="pitch-3d-shot" style="top:25%;left:45%;color:#0ea5e9;background:#0ea5e9"></div>
-                <div class="pitch-3d-shot" style="top:30%;left:55%;color:#10b981;background:#10b981;animation-delay:0.5s"></div>
-                <div class="pitch-3d-shot" style="top:20%;left:38%;color:#0ea5e9;background:#0ea5e9;animation-delay:1s"></div>
-                <div class="pitch-3d-shot" style="top:70%;left:52%;color:#f43f5e;background:#f43f5e;animation-delay:1.5s"></div>
-              </div>
-              <div class="goal-post"><div class="goal-post-bar"></div></div>
+        <div style="position:relative;z-index:2">
+          <div style="display:flex;align-items:flex-start;gap:24px;margin-bottom:28px">
+            <div style="flex:1">
+              <span class="badge-sky" style="margin-bottom:16px;display:inline-block">
+                <span class="pulse-dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--sky);margin-right:6px;vertical-align:middle"></span>
+                Tactical Intel Hub
+              </span>
+              <h1 class="display" style="font-size:76px;line-height:1;color:var(--sky);margin-bottom:6px">CLUTCH</h1>
+              <h1 class="display" style="font-size:76px;line-height:1;color:#f1f5f9">METRICS</h1>
+              <p class="mono" style="font-size:11px;color:rgba(14,165,233,0.75);letter-spacing:.2em;text-transform:uppercase;margin-top:12px">Pressure Creates Legends</p>
             </div>
-          </div>
-          <!-- Description under pitch -->
-          <div class="flex-1 space-y-3">
-            <div class="glass p-4 rounded-xl border border-sky-500/10">
-              <p class="text-[10px] text-sky-400 uppercase font-black tracking-widest mb-1">Live Tracking</p>
-              <p class="text-slate-400 text-xs leading-relaxed">Every shot mapped in real-time. See where your team dominates — and where opponents exploit.</p>
-            </div>
-            <div class="glass p-4 rounded-xl border border-emerald-500/10">
-              <p class="text-[10px] text-emerald-400 uppercase font-black tracking-widest mb-1">Halftime Intel</p>
-              <p class="text-slate-400 text-xs leading-relaxed">Save sessions, compare archives, and make data-backed tactical adjustments at the break.</p>
-            </div>
-          </div>
-        </div>
-        <!-- Hidden elements for JS compatibility -->
-        <div class="hidden">
-          <span id="hero-goals">0</span>
-          <span id="hero-target">0</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- LOGIN FORM SECTION (Consistently gorgeous on ALL form-factors from mobile to high-res screens) -->
-    <div class="col-span-1 lg:col-span-6 xl:col-span-5 flex items-center justify-center w-full">
-      <div class="w-full max-w-md glass p-6 sm:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden glow-box-sky">
-        <!-- Subtle premium gradient top line -->
-        <div class="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-sky-500 via-violet-500 to-emerald-500"></div>
-        
-        <!-- Adaptive Header (Visible on smaller mobile/tablet displays for quick brand recognition) -->
-        <div class="lg:hidden text-center mb-6 space-y-3">
-          <!-- Small 3D Soccer Ball for Mobile -->
-          <div class="flex justify-center mb-2">
-            <div class="ball-scene-sm relative">
-              <div class="soccer-ball-sm">
+            <div class="ball-wrap" style="position:relative;margin-top:12px">
+              <div class="ball-glow"></div>
+              <div class="ball-3d">
                 <svg class="ball-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <radialGradient id="ballShadeSm" cx="38%" cy="35%" r="65%">
-                      <stop offset="0%" stop-color="#ffffff"/>
-                      <stop offset="45%" stop-color="#e8ecf0"/>
-                      <stop offset="100%" stop-color="#8898a8"/>
-                    </radialGradient>
-                  </defs>
-                  <circle cx="100" cy="100" r="96" fill="url(#ballShadeSm)" stroke="#94a3b8" stroke-width="2"/>
-                  <polygon points="100,28 120,42 114,65 86,65 80,42" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
-                  <polygon points="148,72 168,90 160,114 138,118 128,96" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
-                  <polygon points="52,72 72,96 62,118 40,114 32,90" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
-                  <polygon points="68,148 90,138 110,138 132,148 120,172 80,172" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
-                  <circle cx="75" cy="55" r="18" fill="white" opacity="0.15"/>
+                  <defs><radialGradient id="bg1" cx="38%" cy="35%" r="65%"><stop offset="0%" stop-color="#ffffff"/><stop offset="45%" stop-color="#dde4ed"/><stop offset="100%" stop-color="#708092"/></radialGradient></defs>
+                  <circle cx="100" cy="100" r="96" fill="url(#bg1)" stroke="#94a3b8" stroke-width="1.5"/>
+                  <polygon points="100,28 120,42 114,65 86,65 80,42" fill="#151d30" stroke="#334155" stroke-width="1"/>
+                  <polygon points="148,72 168,90 160,114 138,118 128,96" fill="#151d30" stroke="#334155" stroke-width="1"/>
+                  <polygon points="52,72 72,96 62,118 40,114 32,90" fill="#151d30" stroke="#334155" stroke-width="1"/>
+                  <polygon points="68,148 90,138 110,138 132,148 120,172 80,172" fill="#151d30" stroke="#334155" stroke-width="1"/>
+                  <circle cx="75" cy="55" r="18" fill="white" opacity="0.14"/>
                 </svg>
               </div>
             </div>
           </div>
-          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-[10px] font-bold font-mono tracking-wider text-sky-400 uppercase">
-            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span> Tactical Intel
+
+          <p style="color:#64748b;font-size:14px;line-height:1.7;max-width:380px;margin-bottom:28px">Log high-fidelity positional shot telemetry, trace spatial distributions, track mistakes, and generate automated AI halftime coaching strategies.</p>
+
+          <!-- 3D mini pitch visualization -->
+          <div style="display:flex;align-items:flex-end;gap:24px">
+            <div class="pitch-3d-scene" style="flex-shrink:0">
+              <div class="pitch-3d">
+                <div class="pitch-3d-surface">
+                  <div class="pitch-3d-circle"></div>
+                  <div class="pitch-3d-center"></div>
+                  <div class="pitch-3d-box-top"></div>
+                  <div class="pitch-3d-box-bottom"></div>
+                  <div class="pitch-3d-shot" style="top:25%;left:45%;color:#0ea5e9;background:#0ea5e9"></div>
+                  <div class="pitch-3d-shot" style="top:32%;left:55%;color:#10b981;background:#10b981;animation-delay:.5s"></div>
+                  <div class="pitch-3d-shot" style="top:20%;left:36%;color:#0ea5e9;background:#0ea5e9;animation-delay:1s"></div>
+                  <div class="pitch-3d-shot" style="top:72%;left:50%;color:#f43f5e;background:#f43f5e;animation-delay:1.5s"></div>
+                </div>
+              </div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+              <div class="ai-insight" style="padding:12px 14px">
+                <p style="font-size:9px;font-weight:800;color:var(--sky);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px">Tactical Heatmapping</p>
+                <p style="font-size:11px;color:#94a3b8;line-height:1.5">Locate shot concentrations and verify positional conversion percentages.</p>
+              </div>
+              <div class="ai-insight" style="padding:12px 14px;background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(16,185,129,0.03));border-color:rgba(16,185,129,0.18)">
+                <p style="font-size:9px;font-weight:800;color:var(--emerald);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px">Automated AI Intel</p>
+                <p style="font-size:11px;color:#94a3b8;line-height:1.5">Evaluate structural turnovers and player statistics at the half.</p>
+              </div>
+            </div>
           </div>
-          <h1 class="text-3xl font-black tracking-tighter text-sky-400 uppercase">CLUTCH METRICS</h1>
-          <p class="text-[10px] font-mono tracking-widest text-sky-300 uppercase italic">Pressure Creates Legends</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT LOGIN/SIGNUP CARD -->
+    <div style="display:flex;align-items:center;justify-content:center">
+      <div class="glass glow-sky" style="width:100%;max-width:440px;border-radius:28px;padding:40px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sky),var(--violet),var(--emerald))"></div>
+
+        <!-- Small logo view on mobile -->
+        <div style="text-align:center;margin-bottom:28px" id="mobile-brand">
+          <style>@media(min-width:1024px){#mobile-brand{display:none}}</style>
+          <div style="position:relative;width:110px;height:110px;margin:0 auto 16px">
+            <div class="orbit-ring" style="width:108px;height:108px;top:50%;left:50%;animation-duration:16s">
+              <div class="orbit-dot"></div>
+              <div class="orbit-dot-2"></div>
+            </div>
+            <div class="ball-wrap" style="width:72px;height:72px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
+              <div class="ball-glow"></div>
+              <div class="ball-3d">
+                <svg class="ball-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="100" cy="100" r="96" fill="#dde4ed" stroke="#94a3b8" stroke-width="1.5"/>
+                  <polygon points="100,28 120,42 114,65 86,65 80,42" fill="#151d30" stroke="#334155" stroke-width="1"/>
+                  <polygon points="148,72 168,90 160,114 138,118 128,96" fill="#151d30" stroke="#334155" stroke-width="1"/>
+                  <polygon points="52,72 72,96 62,118 40,114 32,90" fill="#151d30" stroke="#334155" stroke-width="1"/>
+                  <polygon points="68,148 90,138 110,138 132,148 120,172 80,172" fill="#151d30" stroke="#334155" stroke-width="1"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <h1 class="display" style="font-size:42px;color:var(--sky);line-height:1">CLUTCH METRICS</h1>
+          <p class="mono" style="font-size:10px;color:rgba(14,165,233,0.6);letter-spacing:.2em;text-transform:uppercase">Pressure Creates Legends</p>
         </div>
 
-        <div class="mb-6">
-          <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white uppercase">Enter The Game</h2>
-          <p id="auth-help" class="text-xs text-slate-400 mt-1">Sign in with your email and password.</p>
+        <h2 style="font-size:22px;font-weight:900;margin-bottom:4px;text-transform:uppercase;letter-spacing:-.01em">Enter The Game</h2>
+        <p id="auth-help" style="font-size:12px;color:#64748b;margin-bottom:24px">Sign in with email &amp; password. New here? Tap Sign Up first.</p>
+
+        <div class="toggle-wrap" style="margin-bottom:24px">
+          <button onclick="switchTab('login')" id="tab-login" class="auth-tab active" style="flex:1">Login</button>
+          <button onclick="switchTab('signup')" id="tab-signup" class="auth-tab" style="flex:1">Sign Up</button>
         </div>
-        
-        <!-- Navigation tab switches -->
-        <div class="flex bg-slate-900/80 p-1 rounded-xl border border-white/5 mb-6">
-          <button onclick="switchTab('login')" id="tab-login" class="auth-tab flex-1 px-4 py-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wider">Login</button>
-          <button onclick="switchTab('signup')" id="tab-signup" class="auth-tab flex-1 px-4 py-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wider">Sign Up</button>
-        </div>
-        
-        <!-- LOGIN FORM -->
-        <div id="form-login" class="space-y-4">
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Email Address</label>
+
+        <!-- LOGIN FORM PANEL -->
+        <div id="form-login">
+          <div style="margin-bottom:16px">
+            <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px">Email Address</label>
             <input id="lu" type="email" class="inp" placeholder="your@email.com">
           </div>
-          <div>
-            <div class="flex justify-between items-center mb-2">
-              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Password</label>
-            </div>
-            <input id="lp" type="password" class="inp" placeholder="••••••••">
+          <div style="margin-bottom:16px">
+            <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px">Password</label>
+            <input id="lp" type="password" class="inp" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
             <p id="lerr" class="err">Invalid email or password.</p>
           </div>
-          
-          <div class="flex items-center space-x-2 py-1">
-            <input id="lrem" type="checkbox" class="w-4 h-4 accent-sky-500 bg-slate-900 border-slate-700 rounded cursor-pointer focus:ring-0">
-            <label for="lrem" class="text-xs text-slate-400 cursor-pointer select-none font-medium">Remember this device</label>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+            <input id="lrem" type="checkbox" style="accent-color:var(--sky);width:14px;height:14px;cursor:pointer">
+            <label for="lrem" style="font-size:12px;color:#64748b;cursor:pointer;select-none">Remember this device</label>
           </div>
-          
-          <button onclick="doLogin()" class="w-full bg-sky-500 hover:bg-sky-400 text-black py-3.5 rounded-xl font-black text-xs uppercase shadow-lg shadow-sky-500/20 active:scale-[0.98] transition duration-200 tracking-wider">
-            Enter The Game
-          </button>
-          
-          <div class="relative py-4 flex items-center justify-center">
-            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
-            <span class="relative px-3 bg-[#0a1122] text-[10px] font-bold text-slate-500 uppercase tracking-widest">or continue with</span>
+          <button onclick="doLogin()" class="btn-primary" style="width:100%;margin-bottom:16px">Enter The Game</button>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+            <span style="font-size:10px;color:#334155;font-weight:800;text-transform:uppercase;letter-spacing:.1em">or</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
           </div>
-          
-          <button onclick="doLoginGoogle()" class="w-full bg-slate-900 hover:bg-slate-800 text-white border border-white/5 py-3 rounded-xl font-bold text-xs uppercase shadow-lg transition flex items-center justify-center gap-2.5 active:scale-[0.98]">
-            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            Google Credentials
+          <button onclick="doLoginGoogle()" style="width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:#e2e8f0;padding:11px 24px;border-radius:12px;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Continue with Google
           </button>
-          
-          <p class="text-xs text-slate-400 text-center mt-6">
-            New to Clutch Metrics? 
-            <button onclick="switchTab('signup')" class="text-sky-400 hover:text-sky-300 font-bold ml-1 transition underline decoration-sky-500/20 underline-offset-4">Create account</button>
-          </p>
+          <p style="font-size:12px;color:#475569;text-align:center;margin-top:20px">New here? <button onclick="switchTab('signup')" style="color:var(--sky);font-weight:700;background:none;border:none;cursor:pointer">Create account</button></p>
         </div>
-        
-        <!-- SIGNUP FORM -->
-        <div id="form-signup" class="space-y-4 hidden">
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Email Address</label>
+
+        <!-- SIGNUP FORM PANEL -->
+        <div id="form-signup" style="display:none">
+          <div style="margin-bottom:14px">
+            <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px">Email Address</label>
             <input id="su" type="email" class="inp" placeholder="your@email.com">
             <p id="suerr" class="err">Email already in use.</p>
           </div>
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Team Name</label>
+          <div style="margin-bottom:14px">
+            <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px">Team Name</label>
             <input id="steam" class="inp" placeholder="e.g. CB South, Lincoln FC">
           </div>
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Password</label>
+          <div style="margin-bottom:14px">
+            <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px">Password</label>
             <input id="sp" type="password" class="inp" placeholder="••••••••">
           </div>
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Confirm Password</label>
+          <div style="margin-bottom:20px">
+            <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:8px">Confirm Password</label>
             <input id="sp2" type="password" class="inp" placeholder="••••••••">
             <p id="sperr" class="err">Passwords do not match.</p>
           </div>
-          
-          <button onclick="doSignup()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-black text-xs uppercase shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition duration-200 tracking-wider">
-            Create Roster Account
-          </button>
-          
-          <p class="text-xs text-slate-400 text-center mt-4">
-            Already registered? 
-            <button onclick="switchTab('login')" class="text-sky-400 hover:text-sky-300 font-bold ml-1 transition underline decoration-sky-500/20 underline-offset-4">Log in</button>
-          </p>
+          <button onclick="doSignup()" class="btn-emerald" style="width:100%">Create Roster Account</button>
+          <p style="font-size:12px;color:#475569;text-align:center;margin-top:20px">Already registered? <button onclick="switchTab('login')" style="color:var(--sky);font-weight:700;background:none;border:none;cursor:pointer">Log in</button></p>
         </div>
       </div>
     </div>
   </div>
 </div>
-</div>
-</div>
-</div>
 
-<!-- APP -->
-<div class="max-w-[1500px] mx-auto flex-1">
-<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 bg-slate-900/50 p-6 rounded-2xl border border-white/5 shadow-2xl">
-  <div>
-  <h1 class="text-3xl font-black tracking-tighter text-sky-400 uppercase">Clutch Metrics</h1>
-  <p class="text-slate-400 text-sm font-bold" id="team-label"></p>
-  <p class="text-slate-500 text-sm font-mono" id="sessionLabel">Session: Live_Draft_01</p>
+<!-- ======== APP CONTENT ======== -->
+<div class="z1">
+  <!-- STICKY TOP BAR -->
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:20px">
+      <div>
+        <h1 class="display" style="font-size:28px;color:var(--sky);line-height:1">CLUTCH METRICS</h1>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+          <div class="live-dot"></div>
+          <span id="team-label" class="mono" style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.08em">My Team</span>
+          <span style="color:#1e293b">·</span>
+          <span id="sessionLabel" class="mono" style="font-size:11px;color:#475569">Live_Draft_01</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="toggle-wrap">
+        <button onclick="setFilter('myteam')" id="f-cbs" class="filter-btn active"><span id="f-cbs-label">My Team</span></button>
+        <button onclick="setFilter('Opponent')" id="f-opp" class="filter-btn">Opponent</button>
+        <button onclick="setFilter('Both')" id="f-both" class="filter-btn">Both</button>
+      </div>
+      <button onclick="openModal('shot-modal')" class="btn-primary" style="padding:9px 18px">+ Add Shot</button>
+      <button onclick="openModal('player-modal')" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--violet);padding:9px 18px;border-radius:12px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:all .2s">Players</button>
+      <button onclick="saveSession()" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--emerald);padding:9px 18px;border-radius:12px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:all .2s">Save Half</button>
+      <button onclick="generateAIInsight()" style="background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(139,92,246,0.12));border:1px solid rgba(14,165,233,0.25);color:#e2e8f0;padding:9px 18px;border-radius:12px;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        AI Intel
+      </button>
+      <button onclick="doLogout()" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:#64748b;padding:9px 14px;border-radius:12px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:all .2s">Logout</button>
+    </div>
   </div>
-<div class="flex bg-slate-800 p-1 rounded-xl border border-white/10">
-<button onclick="setFilter('myteam')" id="f-cbs" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold transition active uppercase"><span id="f-cbs-label">My Team</span></button>
- <button onclick="setFilter('Opponent')" id="f-opp" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold transition uppercase">Opponent</button>
- <button onclick="setFilter('Both')" id="f-both" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold transition uppercase">Both</button>
-</div>
-<div class="flex gap-2 flex-wrap">
-<button onclick="openModal('shot-modal')" class="bg-sky-500 hover:bg-sky-400 text-black px-5 py-2 rounded-lg font-black text-xs uppercase shadow-lg shadow-sky-500/20">Add Shot</button>
- <button onclick="openModal('player-modal')" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg font-black text-xs uppercase shadow-lg shadow-violet-500/20">Players</button>
-<button onclick="saveSession()" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-lg font-black text-xs uppercase shadow-lg shadow-emerald-500/20">Save Half</button>
-  <button onclick="doLogout()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg font-black text-xs uppercase">Logout</button>
+
+  <!-- PLAYER FOCUS CHIPS BAR -->
+  <div id="pf-bar" style="display:none;padding:12px 24px;background:rgba(2,8,19,0.5);border-bottom:1px solid rgba(255,255,255,0.03);flex-wrap:wrap;align-items:center;gap:8px">
+    <span style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.15em;font-family:'JetBrains Mono',monospace">Player Focus:</span>
+    <button onclick="setPlayerFilter('ALL')" id="pf-all" class="pf-btn active">All Players</button>
+    <div id="pf-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
   </div>
-</div>
 
-  <!-- Player filter bar -->
-  <div id="pf-bar" class="hidden mb-4 glass p-3 rounded-2xl flex gap-2 flex-wrap items-center">
-<span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Player:</span>
-<button onclick="setPlayerFilter('ALL')" id="pf-all" class="pf-btn active px-3 py-1 rounded-lg text-xs font-bold border border-white/10 transition uppercase">All</button>
- <div id="pf-chips" class="flex gap-2 flex-wrap"></div>
- </div>
-<div class="grid grid-cols-12 gap-6">
-<div class="col-span-12 lg:col-span-8 space-y-6">
-<div class="grid grid-cols-4 gap-4 text-center">
-<div class="glass p-4 rounded-2xl"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Total Shots</p><h2 id="kpi-shots" class="text-3xl font-black">0</h2></div>
-<div class="glass p-4 rounded-2xl"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">On Target</p><h2 id="kpi-target" class="text-3xl font-black text-sky-400">0</h2></div>
-<div class="glass p-4 rounded-2xl"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Goals</p><h2 id="kpi-goals" class="text-3xl font-black text-emerald-400">0</h2></div>
-<div class="glass p-4 rounded-2xl"><p class="text-[10px] text-slate-500 font-bold uppercase mb-1">Conv %</p><h2 id="kpi-conv" class="text-3xl font-black text-amber-400">0%</h2></div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
- <div class="glass p-6 rounded-3xl h-[300px]"><h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest opacity-70">Tactical Origin</h3><div class="h-full pb-8"><canvas id="chart-type"></canvas></div></div>
-<div class="glass p-6 rounded-3xl h-[300px]"><h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest opacity-70">Positional Efficiency</h3><div class="h-full pb-8"><canvas id="chart-loc"></canvas></div></div>
+  <!-- MAIN HUD PANELS -->
+  <div class="app-pad">
+
+    <!-- KPI STATS BOARD -->
+    <div class="kpi-grid">
+      <div class="kpi-card k-total">
+        <p style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;font-family:'JetBrains Mono',monospace">Total Shots</p>
+        <h2 id="kpi-shots" class="display" style="font-size:48px;line-height:1;color:#e2e8f0">0</h2>
+      </div>
+      <div class="kpi-card k-target">
+        <p style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;font-family:'JetBrains Mono',monospace">On Target</p>
+        <h2 id="kpi-target" class="display" style="font-size:48px;line-height:1;color:var(--violet)">0</h2>
+      </div>
+      <div class="kpi-card k-goals">
+        <p style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;font-family:'JetBrains Mono',monospace">Goals</p>
+        <h2 id="kpi-goals" class="display" style="font-size:48px;line-height:1;color:var(--emerald)">0</h2>
+      </div>
+      <div class="kpi-card k-conv">
+        <p style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;font-family:'JetBrains Mono',monospace">Conv %</p>
+        <h2 id="kpi-conv" class="display" style="font-size:48px;line-height:1;color:var(--amber)">0%</h2>
+      </div>
+    </div>
+
+    <!-- MAIN COCKPIT GRID -->
+    <div class="main-grid">
+
+      <!-- LEFT SECTION -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- AI INTEL PANEL -->
+        <div class="card" style="padding:24px;position:relative;overflow:hidden" id="ai-panel">
+          <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(14,165,233,0.06),transparent 70%);pointer-events:none"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(139,92,246,0.12));display:flex;align-items:center;justify-content:center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              </div>
+              <div>
+                <p style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em">AI Tactical Intel</p>
+                <p class="mono" style="font-size:10px;color:#475569">Halftime adjustments analyzed by Claude</p>
+              </div>
+            </div>
+            <span id="ai-status" class="badge-sky">Ready</span>
+          </div>
+          <div id="ai-output" style="min-height:60px;color:#94a3b8;font-size:13px;line-height:1.7">
+            <p style="color:#334155;font-style:italic">Click "AI Intel" in the top bar to synthesize real-time tactical adjustments based on logged shot distributions.</p>
+          </div>
+        </div>
+
+        <!-- TOP PLAYERS PANEL -->
+        <div class="card" style="padding:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <p class="section-header" style="margin-bottom:0">Top Performers</p>
+            <span class="badge-emerald">Auto-Ranked</span>
+          </div>
+          <div id="top-players" class="top-players-grid">
+            <div style="color:#334155;font-size:12px;grid-column:1/-1;text-align:center;padding:20px">No shot statistics recorded yet.</div>
+          </div>
+        </div>
+
+        <!-- DUAL CHARTS -->
+        <div class="charts-grid">
+          <div class="card" style="padding:20px">
+            <p class="section-header">Attacking Origins</p>
+            <div class="chart-wrap"><canvas id="chart-type"></canvas></div>
+          </div>
+          <div class="card" style="padding:20px">
+            <p class="section-header">Positional Shot Efficiency</p>
+            <div class="chart-wrap"><canvas id="chart-loc"></canvas></div>
+          </div>
+        </div>
+
+        <!-- MATCH EVENT LOG TABLE -->
+        <div class="card" style="overflow:hidden">
+          <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:space-between">
+            <p class="section-header" style="margin-bottom:0">Attacking Logs</p>
+            <span id="filter-status" class="badge-sky">Showing: My Team</span>
+          </div>
+          <div style="max-height:280px;overflow-y:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <tbody id="table-body" style="font-family:'JetBrains Mono',monospace;font-size:11px"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- SPATIAL DISTRIBUTIONS FIELD -->
+        <div class="card" style="padding:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <p class="section-header" style="margin-bottom:0">Spatial Shot Map</p>
+            <div style="display:flex;gap:8px">
+              <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><span style="width:8px;height:8px;border-radius:50%;background:var(--sky);display:inline-block"></span>Us</span>
+              <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><span style="width:8px;height:8px;border-radius:50%;background:var(--rose);display:inline-block"></span>Opp</span>
+            </div>
+          </div>
+          <div class="pitch" id="heatmap-pitch">
+            <div class="pitch-line" style="width:100%;top:50%;border-color:rgba(255,255,255,0.12)"></div>
+            <div class="pitch-line" style="width:60%;height:16%;top:0;left:20%;border-color:rgba(255,255,255,0.12)"></div>
+            <div class="pitch-line" style="width:60%;height:16%;bottom:0;left:20%;border-color:rgba(255,255,255,0.12)"></div>
+            <div class="pitch-line" style="width:80px;height:80px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);border-color:rgba(255,255,255,0.12)"></div>
+            <div style="position:absolute;top:50%;left:50%;width:5px;height:5px;background:rgba(255,255,255,0.15);border-radius:50%;transform:translate(-50%,-50%)"></div>
+            <!-- Goals boxes outline -->
+            <div style="position:absolute;top:0;left:35%;width:30%;height:6%;border:1px solid rgba(255,255,255,0.12);border-top:none"></div>
+            <div style="position:absolute;bottom:0;left:35%;width:30%;height:6%;border:1px solid rgba(255,255,255,0.12);border-bottom:none"></div>
+          </div>
+        </div>
+
+        <!-- MISTAKE TRACKER PANEL -->
+        <div class="card" style="padding:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <p class="section-header" style="margin-bottom:0">Mistake Tracker</p>
+            <span class="badge-rose" id="mistake-count">0 errors</span>
+          </div>
+          <div id="mistake-list" style="display:flex;flex-direction:column;gap:8px;max-height:170px;overflow-y:auto">
+            <p style="font-size:11px;color:#334155;text-align:center;padding:16px">No turnovers logged yet.</p>
+          </div>
+        </div>
+
+        <!-- SAVED SESSIONS PANEL -->
+        <div class="card" style="padding:20px">
+          <p class="section-header">Archives</p>
+          <div id="archives-container" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div id="no-archives" style="font-size:11px;color:#334155;text-align:center;padding:16px">No saved sessions</div>
+        </div>
+      </div>
+    </div>
   </div>
-<div class="glass rounded-3xl overflow-hidden shadow-xl">
-    <div class="bg-white/5 px-6 py-3 border-b border-white/5 flex justify-between items-center">
-  <span class="text-xs font-bold opacity-50 uppercase tracking-widest">Live Shot Log</span>
-   <span id="filter-status" class="text-[10px] bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded italic uppercase font-bold">Showing: My Team</span>
-   </div>
-   <div class="max-h-60 overflow-y-auto font-mono text-[11px]"><table class="w-full text-left"><tbody id="table-body" class="divide-y divide-white/5"></tbody></table></div>
-   </div>
-</div>
-<div class="col-span-12 lg:col-span-4 space-y-6">
-<div class="glass p-6 rounded-[2rem] flex flex-col items-center shadow-2xl">
-<h3 class="text-xs font-bold text-slate-500 uppercase mb-6 tracking-[.2em]">Spatial Distribution</h3>
- <div class="pitch shadow-inner shadow-black" id="heatmap-pitch">
- <div class="pitch-line w-full top-1/2 border-slate-700/50"></div>
-<div class="pitch-line w-3/5 h-[16%] top-0 left-[20%] border-slate-700/50"></div>
- <div class="pitch-line w-3/5 h-[16%] bottom-0 left-[20%] border-slate-700/50"></div>
- <div class="pitch-line w-20 h-20 rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-slate-700/50"></div>
-</div>
-</div>
-<div class="glass p-6 rounded-3xl shadow-xl"><h3 class="text-xs font-bold text-slate-500 uppercase mb-4 tracking-widest">Archives</h3><div id="archives-container" class="space-y-2"></div></div>
-</div>
-</div>
+
+  <!-- FOOTER -->
+  <footer style="padding:24px;margin-top:32px">
+    <div style="max-width:1600px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+      <p style="font-size:12px;color:#334155;max-width:600px;line-height:1.6">This tactical dashboard compiles shot coordinates, conversion metrics, turnovers, and positional build-up patterns to generate halftime coaching assessments.</p>
+      <p class="display" style="font-size:20px;color:var(--sky);letter-spacing:.05em">Made by Parth Kumar</p>
+    </div>
+  </footer>
 </div>
 
-<footer class="mt-12 py-8 rounded-2xl glass">
-  <div class="max-w-[1500px] mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-4">
- <p class="text-slate-400 text-sm">This tactical dashboard provides real-time visualization and statistical analysis for halftime performance evaluation and It enables coaches to track shot volume, accuracy, and attacking patterns to drive data-informed strategic adjustments.</p>
- <p class="text-sky-500 font-black tracking-widest uppercase italic text-lg shrink-0">Made by Parth Kumar</p>
- </div>
-</footer>
-
-<!-- SHOT MODAL -->
+<!-- ======== LOG ATTACK EVENT DIALOG ======== -->
 <div id="shot-modal" class="modal">
-<div class="glass p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl shadow-sky-500/10" style="max-height:90vh;overflow-y:auto">
-<h2 class="text-xl font-black mb-6 italic text-sky-400 tracking-tighter uppercase underline decoration-sky-500/30">Log Event</h2>
-<div class="space-y-4">
-<input type="number" id="m-min" class="inp" placeholder="Minute">
-<select id="m-team" onchange="onTeamChange()" class="inp">
- <option id="opt-myteam" value="myteam">My Team</option><option value="Opponent">Opponent</option>
- </select>
- <div id="shooter-cbs"><select id="m-shooter-sel" class="inp"><option value="">— Select Shooter —</option></select></div>
- <div id="shooter-opp" class="hidden"><input id="m-shooter-txt" class="inp" placeholder="Shooter Name"></div>
- <select id="m-type" class="inp">
-   <option>Through Ball</option><option>Cross</option><option>Set Piece</option><option>Mistake</option><option>Rebound</option>
- </select>
-<div id="assist-cbs"><select id="m-assist-sel" class="inp"><option value="">— Assister (optional) —</option></select></div>
- <div id="assist-opp" class="hidden"><input id="m-assist-txt" class="inp" placeholder="Assister (optional)"></div>
-<select id="m-loc" class="inp">
- <option value="Center Box">Center Box</option><option value="Left Box">Left Box</option><option value="Right Box">Right Box</option><option value="Outside Box">Outside Box</option>
-</select>
-<select id="m-out" class="inp">
- <option value="Miss">Miss</option><option value="On Target">On Target</option><option value="Goal">Goal</option>
-</select>
-<div class="flex gap-3 pt-2">
- <button onclick="logShot()" class="flex-1 bg-sky-500 py-3 rounded-xl font-black text-black shadow-lg shadow-sky-500/30 hover:scale-105 transition uppercase text-xs">Commit</button>
- <button onclick="closeModal('shot-modal')" class="flex-1 bg-slate-700 py-3 rounded-xl font-bold uppercase text-xs">Close</button>
-</div>
-</div>
-</div>
+  <div class="glass glow-sky" style="padding:32px;border-radius:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;position:relative">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sky),var(--violet))"></div>
+    <h2 class="display" style="font-size:32px;color:var(--sky);margin-bottom:6px">LOG EVENT</h2>
+    <p class="mono" style="font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.12em;margin-bottom:24px">Record attempt coordinates</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:6px">Minute</label>
+        <input type="number" id="m-min" class="inp" placeholder="e.g. 23">
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:6px">Team</label>
+        <select id="m-team" onchange="onTeamChange()" class="inp">
+          <option id="opt-myteam" value="myteam">My Team</option>
+          <option value="Opponent">Opponent</option>
+        </select>
+      </div>
+      <div id="shooter-cbs">
+        <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:6px">Shooter</label>
+        <select id="m-shooter-sel" class="inp"><option value="">— Select Shooter —</option></select>
+      </div>
+      <div id="shooter-opp" style="display:none">
+        <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:6px">Shooter Name</label>
+        <input id="m-shooter-txt" class="inp" placeholder="Opponent player name">
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:6px">Shot Type</label>
+        <select id="m-type" onchange="onShotTypeChange()" class="inp">
+          <option>Normal Shot</option>
+          <option>Through Ball</option>
+          <option>Cross</option>
+          <option>Set Piece</option>
+          <option>Mistake</option>
+          <option>Rebound</option>
+        </select>
+      </div>
+      <!-- ASSISTER DROPDOWN -->
+      <div id="assister-section">
+        <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:6px">Assister <span style="color:#334155;font-weight:400">(optional)</span></label>
+        <div id="assist-cbs">
+          <select id="m-assist-sel" class="inp"><option value="">— No Assister —</option></select>
+        </div>
+        <div id="assist-opp" style="display:none">
+          <input id="m-assist-txt" class="inp" placeholder="Assister name (optional)">
+        </div>
+      </div>
+      <!-- TURNOVER RESPONSIBLE PLAYER SECTION (conceded to opponent from our turnover) -->
+      <div id="mistake-section" style="display:none">
+        <label style="font-size:10px;font-weight:800;color:var(--rose);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:6px">⚠ Our Player Who Lost Possession</label>
+        <select id="m-mistake-player" class="inp" style="border-color:rgba(244,63,94,0.3)">
+          <option value="">— Select Player —</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:6px">Zone / Origin Location</label>
+        <select id="m-loc" class="inp">
+          <option value="Center Box">Center Box</option>
+          <option value="Left Box">Left Box</option>
+          <option value="Right Box">Right Box</option>
+          <option value="Outside Box">Outside Box</option>
+          <option value="Outside the Pitch">Outside the Pitch</option>
+          <option value="Far Range">Far Range</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:6px">Outcome</label>
+        <select id="m-out" class="inp">
+          <option value="Miss">Miss</option>
+          <option value="On Target">On Target</option>
+          <option value="Goal">Goal</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:12px;padding-top:8px">
+        <button onclick="logShot()" class="btn-primary" style="flex:1">Commit Event</button>
+        <button onclick="closeModal('shot-modal')" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#94a3b8;padding:12px;border-radius:12px;font-weight:700;font-size:12px;text-transform:uppercase;cursor:pointer">Cancel</button>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- PLAYER MODAL -->
+<!-- ======== ROSTER MANAGEMENT DIALOG ======== -->
 <div id="player-modal" class="modal">
-<div class="glass p-8 rounded-[2.5rem] w-full max-w-sm shadow-2xl shadow-violet-500/10" style="max-height:90vh;overflow-y:auto">
-<h2 class="text-xl font-black mb-2 italic text-violet-400 tracking-tighter uppercase underline decoration-violet-500/30">Manage Roster</h2>
-<p class="text-slate-500 text-xs mb-5" id="roster-subtitle">Your team's players, selectable when logging shots.</p>
- <div class="flex gap-2 mb-5">
- <input id="new-player" class="inp flex-1" placeholder="Player name (e.g. #10 Smith)">
-   <button onclick="addPlayer()" class="bg-violet-600 hover:bg-violet-500 text-white px-4 rounded-xl font-black text-xs uppercase">Add</button>
-</div>
-<div id="player-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
- <button onclick="closeModal('player-modal')" class="w-full mt-5 bg-slate-700 py-3 rounded-xl font-bold uppercase text-xs">Done</button>
-</div>
+  <div class="glass glow-violet" style="padding:32px;border-radius:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;position:relative">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--violet),var(--sky))"></div>
+    <h2 class="display" style="font-size:32px;color:var(--violet);margin-bottom:4px">TEAM ROSTER</h2>
+    <p id="roster-subtitle" class="mono" style="font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.1em;margin-bottom:24px">Manage active players</p>
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <input id="new-player" class="inp" style="flex:1" placeholder="e.g. #10 Smith" onkeydown="if(event.key==='Enter')addPlayer()">
+      <button onclick="addPlayer()" style="background:var(--violet);color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;font-size:12px;text-transform:uppercase;cursor:pointer;border:none;white-space:nowrap">+ Add</button>
+    </div>
+    <div id="player-list" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto"></div>
+    <button onclick="closeModal('player-modal')" style="width:100%;margin-top:20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:#64748b;padding:12px;border-radius:12px;font-weight:700;font-size:12px;text-transform:uppercase;cursor:pointer">Done</button>
+  </div>
 </div>
 
+<!-- =========================================================================== -->
+<!-- ======================== APPLICATION JAVASCRIPT =========================== -->
+<!-- =========================================================================== -->
 <script>
-// -- AUTH ---------------------------------------------------------------------
+// -- APPLICATION STATE VARIABLES ----------------------------------------------
 let currentUser=null, currentEmail='', teamName='My Team', allShots=[], filterMode='myteam', savedSessions={}, players=[], playerFilter='ALL', tChart, lChart;
+
 const firebaseConfig={
   apiKey:'AIzaSyDox7iut0-sxwNHLS6JpDQt6taMIT_bYfc',
   authDomain:'clutch-metrics.firebaseapp.com',
@@ -548,10 +686,12 @@ const firebaseConfig={
 };
 const firebaseReady=!Object.values(firebaseConfig).some(v=>String(v).includes('YOUR_'));
 let auth=null;
+
 const uKey=()=>`cm_data_${currentUser}`;
 const pKey=()=>`cm_players_${currentUser}`;
 const teamKey=()=>`cm_team_${currentUser}`;
 
+// -- FIREBASE STATE INITIALIZATION --------------------------------------------
 if(firebaseReady){
   firebase.initializeApp(firebaseConfig);
   auth=firebase.auth();
@@ -564,18 +704,21 @@ if(firebaseReady){
       players=JSON.parse(localStorage.getItem(pKey())||'[]');
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('lu').value=currentEmail;
-      applyTeamName(); updateUI();
+      applyTeamName(); 
+      updateUI();
+      showToast(`Signed in as ${user.email}`, 'info');
       return;
     }
     currentUser=null; currentEmail=''; teamName='My Team'; allShots=[]; savedSessions={}; players=[]; playerFilter='ALL'; filterMode='myteam';
     document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('auth-help').innerText='Use the Firebase project configured in this file to sign in.';
-    applyTeamName(); updateUI();
+    document.getElementById('auth-help').innerText='Log in using Email & Password. Roster data syncs automatically.';
+    applyTeamName(); 
+    updateUI();
   });
 } else {
   document.addEventListener('DOMContentLoaded',()=>{
     const help=document.getElementById('auth-help');
-    if(help) help.innerText='Add your Firebase config in this file to enable login on GitHub Pages.';
+    if(help) help.innerText='Firebase credentials missing in static header setup.';
   });
 }
 
@@ -584,12 +727,13 @@ function applyTeamName(){
   document.getElementById('team-label').innerText=t;
   document.getElementById('f-cbs-label').innerText=t;
   document.getElementById('opt-myteam').innerText=t;
-  document.getElementById('roster-subtitle').innerText=`${t} players, selectable when logging shots.`;
+  document.getElementById('roster-subtitle').innerText=`Manage active roster for ${t}.`;
 }
 
+// -- TAB PANEL NAVIGATION -----------------------------------------------------
 function switchTab(t){
   ['login','signup'].forEach(x=>{
-    document.getElementById('form-'+x).classList.toggle('hidden',x!==t);
+    document.getElementById('form-'+x).style.display = (x===t) ? 'block' : 'none';
     document.getElementById('tab-'+x).classList.toggle('active',x===t);
   });
   ['lerr','suerr','sperr'].forEach(id=>document.getElementById(id).classList.remove('show'));
@@ -597,21 +741,22 @@ function switchTab(t){
   if(authScreen) authScreen.scrollTo({top:0,behavior:'smooth'});
 }
 
+// -- USER ACCESS CONTROL ------------------------------------------------------
 function doLogin(){
-  if(!auth){document.getElementById('auth-help').innerText='Firebase is not configured yet. Replace the placeholder values in index.html first.';return;}
+  if(!auth){showToast('Firebase initialization error.', 'warn');return;}
   const email=document.getElementById('lu').value.trim(), password=document.getElementById('lp').value;
   document.getElementById('lerr').classList.remove('show');
   auth.signInWithEmailAndPassword(email,password).catch(()=>document.getElementById('lerr').classList.add('show'));
 }
 
 function doLoginGoogle(){
-  if(!auth){console.log('Firebase not configured');return;}
+  if(!auth){showToast('Firebase not initialized.', 'warn');return;}
   const provider=new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(err=>console.log('Google login error:',err.message));
+  auth.signInWithPopup(provider).catch(err=>showToast('Google auth cancelled: '+err.message, 'warn'));
 }
 
 async function doSignup(){
-  if(!auth){document.getElementById('auth-help').innerText='Firebase is not configured yet. Replace the placeholder values in index.html first.';return;}
+  if(!auth){showToast('Firebase not configured.', 'warn');return;}
   const u=document.getElementById('su').value.trim(), p=document.getElementById('sp').value, p2=document.getElementById('sp2').value;
   const team=document.getElementById('steam').value.trim()||'My Team';
   let ok=true;
@@ -623,7 +768,7 @@ async function doSignup(){
     await cred.user.updateProfile({displayName:team});
     localStorage.setItem(`cm_team_${cred.user.uid}`,team);
     document.getElementById('lu').value=u; document.getElementById('lp').value=p;
-    document.getElementById('auth-help').innerText='Account created. You are now signed in with Firebase Auth.';
+    showToast('Sign up successful! Entering match hub...');
     switchTab('login');
   }catch(err){
     document.getElementById('suerr').classList.add('show');
@@ -631,173 +776,539 @@ async function doSignup(){
 }
 
 function doLogout(){
-  if(!auth){document.getElementById('auth-screen').classList.remove('hidden');updateUI();return;}
+  if(!auth){
+    document.getElementById('auth-screen').classList.remove('hidden');
+    updateUI();
+    return;
+  }
   auth.signOut();
+  showToast('Logged out of telemetry session.', 'info');
 }
 
-// -- PLAYERS ------------------------------------------------------------------
+// -- NOTIFICATION TOAST HUD ---------------------------------------------------
+function showToast(msg, type = 'ok') {
+  const wrap = document.getElementById('toast-wrap');
+  if (!wrap) return;
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  let icon = '✓';
+  if(type === 'warn') icon = '⚠';
+  if(type === 'info') icon = 'ℹ';
+  t.innerHTML = `<span class="flex items-center justify-center font-bold text-xs">${icon}</span> <span>${msg}</span>`;
+  wrap.appendChild(t);
+  setTimeout(() => {
+    t.style.animation = 'toastOut .3s ease-in forwards';
+    t.addEventListener('animationend', () => t.remove());
+  }, 3000);
+}
+
+// -- ROSTER SYSTEM ------------------------------------------------------------
 function addPlayer(){
   const inp=document.getElementById('new-player'), name=inp.value.trim();
   if(!name||players.includes(name))return;
   players.push(name); inp.value='';
   if(currentUser) localStorage.setItem(pKey(),JSON.stringify(players));
-  renderPlayerList(); refreshPlayerSelects(); updatePlayerFilterBar();
+  renderPlayerList(); 
+  refreshPlayerSelects(); 
+  updatePlayerFilterBar();
+  showToast(`Added ${name} to roster.`);
 }
 
 function removePlayer(name){
   players=players.filter(p=>p!==name);
-  if(playerFilter===name)playerFilter='ALL';
+  if(playerFilter===name) playerFilter='ALL';
   if(currentUser) localStorage.setItem(pKey(),JSON.stringify(players));
-  renderPlayerList(); refreshPlayerSelects(); updatePlayerFilterBar(); updateUI();
+  renderPlayerList(); 
+  refreshPlayerSelects(); 
+  updatePlayerFilterBar(); 
+  updateUI();
+  showToast(`Removed ${name} from roster.`, 'warn');
 }
 
 function renderPlayerList(){
   const el=document.getElementById('player-list');
   el.innerHTML=players.length?players.map(p=>`
-<div class="flex items-center justify-between bg-white/5 border border-white/5 px-4 py-2 rounded-xl group">
- <span class="text-sm font-bold text-violet-300">${p}</span>
- <button onclick="removePlayer('${p.replace(/'/g,"\\'")}')" class="text-rose-900 group-hover:text-rose-500 font-black">x</button>
-</div>`).join('')
-:'<p class="text-slate-600 text-xs text-center py-4">No players added yet.</p>';
+    <div class="flex items-center justify-between bg-white/5 border border-white/5 px-4 py-2.5 rounded-xl group hover:border-violet-500/30 transition">
+      <span class="text-sm font-bold text-violet-300">${p}</span>
+      <button onclick="removePlayer('${p.replace(/'/g,"\\'")}')" class="text-rose-900 group-hover:text-rose-500 font-bold transition">×</button>
+    </div>`).join('')
+  :'<p class="text-slate-600 text-xs text-center py-6">No players configured. Add roster names to track accuracy.</p>';
 }
 
 function refreshPlayerSelects(){
   const opts='<option value="">— Select Shooter —</option>'+players.map(p=>`<option>${p}</option>`).join('');
-  const aOpts='<option value="">— Assister (optional) —</option>'+players.map(p=>`<option>${p}</option>`).join('');
+  const aOpts='<option value="">— No Assister —</option>'+players.map(p=>`<option>${p}</option>`).join('');
+  const mOpts='<option value="">— Select Player —</option>'+players.map(p=>`<option>${p}</option>`).join('');
+  
   document.getElementById('m-shooter-sel').innerHTML=opts;
   document.getElementById('m-assist-sel').innerHTML=aOpts;
+  document.getElementById('m-mistake-player').innerHTML=mOpts;
 }
 
 function updatePlayerFilterBar(){
   const bar=document.getElementById('pf-bar');
-  if(!players.length){bar.classList.add('hidden');return;}
-  bar.classList.remove('hidden');
+  if(!players.length){bar.style.display='none';return;}
+  bar.style.display='flex';
   document.getElementById('pf-chips').innerHTML=players.map(p=>`
-<button onclick="setPlayerFilter('${p.replace(/'/g,"\\'")}')" data-pf="${p}"
-class="pf-btn ${playerFilter===p?'active':''} px-3 py-1 rounded-lg text-xs font-bold border border-white/10 transition uppercase">${p}</button>`).join('');
-  document.getElementById('pf-all').className='pf-btn '+(playerFilter==='ALL'?'active':'')+' px-3 py-1 rounded-lg text-xs font-bold border border-white/10 transition uppercase';
+    <button onclick="setPlayerFilter('${p.replace(/'/g,"\\'")}')" data-pf="${p}"
+    class="pf-btn ${playerFilter===p?'active':''} px-3 py-1 rounded-lg text-xs font-bold transition uppercase">${p}</button>`).join('');
+  document.getElementById('pf-all').className='pf-btn '+(playerFilter==='ALL'?'active':'')+' px-3 py-1 rounded-lg text-xs font-bold transition uppercase';
 }
 
-function setPlayerFilter(p){playerFilter=p; updatePlayerFilterBar(); updateUI();}
+function setPlayerFilter(p){
+  playerFilter=p; 
+  updatePlayerFilterBar(); 
+  updateUI();
+  showToast(`Filter focused: ${p}`, 'info');
+}
 
-// -- MODAL --------------------------------------------------------------------
+// -- SYSTEM MODALS ------------------------------------------------------------
 function openModal(id){
   document.getElementById(id).classList.add('active');
   if(id==='shot-modal'){
     refreshPlayerSelects();
     ['m-min','m-shooter-txt','m-assist-txt'].forEach(x=>document.getElementById(x).value='');
-    document.getElementById('m-team').value='myteam'; onTeamChange();
+    document.getElementById('m-team').value='myteam'; 
+    document.getElementById('m-type').value='Normal Shot'; 
+    document.getElementById('m-out').value='Miss'; 
+    onTeamChange();
+    onShotTypeChange();
   }
   if(id==='player-modal') renderPlayerList();
 }
-function closeModal(id){document.getElementById(id).classList.remove('active');}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove('active');
+}
 
 function onTeamChange(){
   const isMine=document.getElementById('m-team').value==='myteam';
-  document.getElementById('shooter-cbs').classList.toggle('hidden',!isMine);
-  document.getElementById('shooter-opp').classList.toggle('hidden',isMine);
-  document.getElementById('assist-cbs').classList.toggle('hidden',!isMine);
-  document.getElementById('assist-opp').classList.toggle('hidden',isMine);
+  document.getElementById('shooter-cbs').style.display = isMine ? 'block' : 'none';
+  document.getElementById('shooter-opp').style.display = !isMine ? 'block' : 'none';
+  document.getElementById('assist-cbs').style.display = isMine ? 'block' : 'none';
+  document.getElementById('assist-opp').style.display = !isMine ? 'block' : 'none';
+  onShotTypeChange();
 }
 
-// -- SHOTS --------------------------------------------------------------------
-const zones={'Center Box':{x:50,y:12},'Left Box':{x:25,y:12},'Right Box':{x:75,y:12},'Outside Box':{x:50,y:30}};
+function onShotTypeChange(){
+  const isMine=document.getElementById('m-team').value==='myteam';
+  const type=document.getElementById('m-type').value;
+  const isMistake = type==='Mistake';
+  
+  // Show turnover dropdown if opponent scored/shot originating from our turnover error
+  const mistSect = document.getElementById('mistake-section');
+  if(!isMine && isMistake){
+    mistSect.style.display = 'block';
+  } else {
+    mistSect.style.display = 'none';
+  }
+  
+  // Turnovers typically have no assisters
+  document.getElementById('assister-section').style.display = isMistake ? 'none' : 'block';
+}
+
+// -- SHOTS DATABASE LAYER -----------------------------------------------------
+const zones={
+  'Center Box':{x:50,y:12},
+  'Left Box':{x:24,y:12},
+  'Right Box':{x:76,y:12},
+  'Outside Box':{x:50,y:28},
+  'Outside the Pitch':{x:50,y:4},
+  'Far Range':{x:50,y:46}
+};
 
 function logShot(){
   const isMine=document.getElementById('m-team').value==='myteam';
+  const type=document.getElementById('m-type').value;
+  const outcome=document.getElementById('m-out').value;
+  
   const shooter=isMine?document.getElementById('m-shooter-sel').value:document.getElementById('m-shooter-txt').value.trim()||'—';
   const assister=isMine?document.getElementById('m-assist-sel').value:document.getElementById('m-assist-txt').value.trim();
   const loc=document.getElementById('m-loc').value;
-  const z=zones[loc];
+  const z=zones[loc]||zones['Outside Box'];
   const team=isMine?teamName:'Opponent';
+  
+  let mistakePlayer = '';
+  if(!isMine && type==='Mistake'){
+    mistakePlayer = document.getElementById('m-mistake-player').value;
+  }
+  
   allShots.push({
     id:Date.now(),
     min:document.getElementById('m-min').value||'0',
-    team, shooter:shooter||'—', assister,
-    type:document.getElementById('m-type').value,
-    loc, out:document.getElementById('m-out').value,
+    team, 
+    shooter:shooter||'—', 
+    assister:assister||'',
+    type,
+    loc, 
+    out:outcome,
+    mistakePlayer,
     x:z.x+(Math.random()*6-3),
     y:!isMine?100-(z.y+(Math.random()*4-2)):z.y+(Math.random()*4-2)
   });
-  closeModal('shot-modal'); updateUI();
+  
+  closeModal('shot-modal'); 
+  updateUI();
+  showToast(`Event logged: ${team} shot (${outcome}).`);
 }
 
-function delShot(id){allShots=allShots.filter(s=>s.id!==id);updateUI();}
+function delShot(id){
+  allShots=allShots.filter(s=>s.id!==id);
+  updateUI();
+  showToast('Event removed from session logs.', 'warn');
+}
 
-// -- FILTER + RENDER ----------------------------------------------------------
+// -- UI RENDERING ENGINE ------------------------------------------------------
 function setFilter(m){
   filterMode=m;
   ['cbs','opp','both'].forEach(x=>document.getElementById('f-'+x).classList.remove('active'));
   document.getElementById(m==='myteam'?'f-cbs':m==='Opponent'?'f-opp':'f-both').classList.add('active');
   updateUI();
+  showToast(`Scope toggled: ${m==='myteam'?teamName:m}`, 'info');
 }
 
 function updateUI(){
-  let data=allShots.filter(s=>filterMode==='Both'||s.team===(filterMode==='myteam'?teamName:filterMode));
-  if(playerFilter!=='ALL') data=data.filter(s=>s.shooter===playerFilter||s.assister===playerFilter);
+  const filterLabel=filterMode==='myteam'?teamName:filterMode;
+  let data=allShots.filter(s=>filterMode==='Both'||s.team===filterLabel);
+  
+  if(playerFilter!=='ALL'){
+    // Filter stats for our team focus players
+    data=data.filter(s=>(s.shooter===playerFilter && s.team===teamName) || (s.assister===playerFilter && s.team===teamName) || (s.team==='Opponent' && s.mistakePlayer===playerFilter));
+  }
+  
   const goals=data.filter(s=>s.out==='Goal').length;
   const target=data.filter(s=>s.out!=='Miss').length;
+  
+  // 1. KPI cards countup
   document.getElementById('kpi-shots').innerText=data.length;
   document.getElementById('kpi-target').innerText=target;
   document.getElementById('kpi-goals').innerText=goals;
   document.getElementById('kpi-conv').innerText=data.length?Math.round(goals/data.length*100)+'%':'0%';
-  document.getElementById('hero-goals').innerText=goals;
-  document.getElementById('hero-target').innerText=target;
-  const filterLabel=filterMode==='myteam'?teamName:filterMode;
-  document.getElementById('filter-status').innerText=`Showing: ${filterLabel}${playerFilter!=='ALL'?' · '+playerFilter:''}`;
+  
+  document.getElementById('filter-status').innerText=`Scope: ${filterLabel}${playerFilter!=='ALL'?' · '+playerFilter:''}`;
 
+  // 2. Render Live Logs
   document.getElementById('table-body').innerHTML=data.slice().reverse().map(s=>`
-    <tr class="hover:bg-white/5 transition">
-      <td class="px-4 py-2 opacity-40">${s.min}'</td>
-      <td class="px-4 py-2 font-bold ${s.team===teamName?'text-sky-400':'text-rose-500'} uppercase text-[10px]">${s.team}</td>
-      <td class="px-4 py-2"><div class="font-bold">${s.shooter}</div>${s.assister?`<div class="text-[10px] text-amber-400">↗ ${s.assister}</div>`:''}</td>
-      <td class="px-4 py-2 uppercase tracking-tighter opacity-80 text-[10px]">${s.type}</td>
-      <td class="px-4 py-2 text-slate-500 text-[10px]">${s.loc}</td>
-      <td class="px-4 py-2 ${s.out==='Goal'?'text-emerald-400 font-bold':''} italic text-[10px]">${s.out}</td>
-      <td class="px-4 py-2 text-right"><button onclick="delShot(${s.id})" class="text-rose-900 hover:text-rose-500">x</button></td>
+    <tr class="hover:bg-white/5 transition border-b border-white/5">
+      <td class="px-4 py-3 opacity-40 font-bold">${s.min}'</td>
+      <td class="px-4 py-3 font-bold ${s.team===teamName?'text-sky-400':'text-rose-500'} uppercase text-[10px] tracking-wider">${s.team}</td>
+      <td class="px-4 py-3">
+        <div class="font-bold text-slate-200">${s.shooter}</div>
+        ${s.assister?`<div class="text-[9px] text-amber-500 font-mono">↗ Assist: ${s.assister}</div>`:''}
+        ${s.mistakePlayer?`<div class="text-[9px] text-rose-500 font-mono">⚠ Error: ${s.mistakePlayer}</div>`:''}
+      </td>
+      <td class="px-4 py-3 uppercase tracking-tighter opacity-80 text-[10px] font-mono">${s.type}</td>
+      <td class="px-4 py-3 text-slate-500 text-[10px] font-mono">${s.loc}</td>
+      <td class="px-4 py-3 ${s.out==='Goal'?'text-emerald-400 font-bold':s.out==='On Target'?'text-violet-400':''} italic text-[10px]">${s.out}</td>
+      <td class="px-4 py-3 text-right"><button onclick="delShot(${s.id})" class="text-slate-700 hover:text-rose-500 font-bold px-2 text-sm transition">×</button></td>
     </tr>`).join('');
 
+  // 3. Positional coordinates rendering
   const pitch=document.getElementById('heatmap-pitch');
   pitch.querySelectorAll('.shot-dot').forEach(d=>d.remove());
   data.forEach(s=>{
     const d=document.createElement('div');
     d.className='shot-dot';
-    d.style.cssText=`left:${s.x}%;top:${s.y}%;background:${s.team===teamName?'#0ea5e9':'#f43f5e'};box-shadow:0 0 10px ${s.team===teamName?'#0ea5e988':'#f43f5e88'}`;
-    if(s.out==='Goal'){d.style.border='2px solid white';d.style.width='14px';d.style.height='14px';}
+    d.style.cssText=`left:${s.x}%;top:${s.y}%;background:${s.team===teamName?'var(--sky)':'var(--rose)'};box-shadow:0 0 10px ${s.team===teamName?'rgba(14,165,233,0.5)':'rgba(244,63,94,0.5)'}`;
+    if(s.out==='Goal'){
+      d.style.border='2px solid #fff';
+      d.style.width='15px';
+      d.style.height='15px';
+      d.style.boxShadow = `0 0 15px #fff, 0 0 10px ${s.team===teamName?'var(--sky)':'var(--rose)'}`;
+    }
     d.title=`${s.min}' · ${s.shooter}${s.assister?' · ↗'+s.assister:''} · ${s.out}`;
     pitch.appendChild(d);
   });
 
-  const co={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,.03)'},ticks:{color:'#475569',font:{family:'JetBrains Mono',size:10}}},x:{ticks:{color:'#475569',font:{family:'JetBrains Mono',size:10}},grid:{display:false}}}};
-  const types=['Through Ball','Cross','Set Piece','Mistake','Rebound'];
-  const locs=['Center Box','Left Box','Right Box','Outside Box'];
-  if(tChart)tChart.destroy(); if(lChart)lChart.destroy();
-  tChart=new Chart(document.getElementById('chart-type'),{type:'bar',data:{labels:types,datasets:[{data:types.map(t=>data.filter(s=>s.type===t).length),backgroundColor:'#0ea5e9',borderRadius:4,barThickness:20}]},options:co});
-  lChart=new Chart(document.getElementById('chart-loc'),{type:'line',data:{labels:locs,datasets:[{data:locs.map(l=>data.filter(s=>s.loc===l).length),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',fill:true,tension:.4,borderWidth:3,pointRadius:4,pointBackgroundColor:'#10b981'}]},options:co});
+  // 4. Update Dynamic Roster Rankings
+  const topPlayersEl = document.getElementById('top-players');
+  const activePlayers = players.map(p => {
+    const pShots = allShots.filter(s => s.team === teamName && s.shooter === p);
+    const pGoals = pShots.filter(s => s.out === 'Goal').length;
+    const pAssists = allShots.filter(s => s.team === teamName && s.assister === p).length;
+    const pMistakes = allShots.filter(s => s.team === 'Opponent' && s.type === 'Mistake' && s.mistakePlayer === p).length;
+    const totalCon = pShots.length + pAssists + pMistakes;
+    return { name: p, goals: pGoals, assists: pAssists, shots: pShots.length, mistakes: pMistakes, totalCon };
+  }).filter(p => p.totalCon > 0);
 
+  // Score Formula: goals = 3, assists = 1.5, shots = 0.5, turnovers = -1
+  activePlayers.sort((a, b) => (b.goals * 3 + b.assists * 1.5 + b.shots * 0.5 - b.mistakes) - (a.goals * 3 + a.assists * 1.5 + a.shots * 0.5 - a.mistakes));
+
+  if (activePlayers.length === 0) {
+    topPlayersEl.innerHTML = `<div class="text-slate-600 text-xs text-center py-6 col-span-2">No statistics recorded for roster players. Log attempts to rank.</div>`;
+  } else {
+    topPlayersEl.innerHTML = activePlayers.slice(0, 4).map((p, idx) => {
+      const avatars = ['bg-sky-500/10 text-sky-400 border-sky-500/20', 'bg-violet-500/10 text-violet-400 border-violet-500/20', 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', 'bg-amber-500/10 text-amber-400 border-amber-500/20'];
+      const av = avatars[idx % avatars.length];
+      return `
+        <div class="player-card glass flex items-center justify-between p-3 rounded-xl border border-white/5">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${av} border">
+              ${idx + 1}
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-200 truncate max-w-[80px]">${p.name}</p>
+              <p class="text-[8px] font-mono text-slate-500 uppercase tracking-widest">RANKED #${idx + 1}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5 font-mono text-[9px]">
+            <span class="text-emerald-400 font-bold">${p.goals}G</span>
+            <span class="text-violet-400">${p.assists}A</span>
+            <span class="text-sky-400">${p.shots}S</span>
+            ${p.mistakes > 0 ? `<span class="text-rose-400 font-bold">${p.mistakes}E</span>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 5. Update Mistake Tracker panel
+  const mistakes = allShots.filter(s => s.type === 'Mistake');
+  document.getElementById('mistake-count').innerText = `${mistakes.length} errors`;
+  const mistakeListEl = document.getElementById('mistake-list');
+  
+  if (mistakes.length === 0) {
+    mistakeListEl.innerHTML = `<p class="text-[11px] text-slate-600 text-center py-6">No turnover errors logged. Defensive transitions secure.</p>`;
+  } else {
+    mistakeListEl.innerHTML = mistakes.map(s => {
+      const isOpp = s.team === 'Opponent';
+      const responsible = isOpp ? s.mistakePlayer : s.shooter;
+      const txt = isOpp 
+        ? `<span class="text-rose-400 font-bold">${responsible || 'Team'}</span> turnover conceded opponent shot`
+        : `<span class="text-slate-400 font-bold">${responsible || 'Team'}</span> mistake preceding our shot`;
+      return `
+        <div class="flex items-center justify-between bg-rose-500/5 border border-rose-500/10 p-2.5 rounded-xl text-[10px] font-mono hover:bg-rose-500/8 transition">
+          <div class="flex items-center gap-2">
+            <span class="mistake-flag shrink-0">⚠ ${s.min}'</span>
+            <span class="text-slate-300 truncate max-w-[190px]">${txt} (${s.loc})</span>
+          </div>
+          <button onclick="delShot(${s.id})" class="text-slate-600 hover:text-rose-400 font-bold px-1">×</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 6. Draw Chart.js diagrams
+  const co={
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      y:{grid:{color:'rgba(255,255,255,.02)'},ticks:{color:'#475569',font:{family:'JetBrains Mono',size:9}}},
+      x:{ticks:{color:'#475569',font:{family:'JetBrains Mono',size:9}},grid:{display:false}}
+    }
+  };
+  const types=['Normal Shot','Through Ball','Cross','Set Piece','Mistake','Rebound'];
+  const locs=['Center Box','Left Box','Right Box','Outside Box','Outside the Pitch','Far Range'];
+  
+  if(tChart) tChart.destroy(); 
+  if(lChart) lChart.destroy();
+  
+  tChart=new Chart(document.getElementById('chart-type'),{
+    type:'bar',
+    data:{
+      labels:types,
+      datasets:[{
+        data:types.map(t=>data.filter(s=>s.type===t).length),
+        backgroundColor:'#0ea5e9',
+        borderRadius:6,
+        barThickness:14
+      }]
+    },
+    options:co
+  });
+  
+  lChart=new Chart(document.getElementById('chart-loc'),{
+    type:'line',
+    data:{
+      labels:locs,
+      datasets:[{
+        data:locs.map(l=>data.filter(s=>s.loc===l).length),
+        borderColor:'#10b981',
+        backgroundColor:'rgba(16,185,129,.05)',
+        fill:true,
+        tension:.38,
+        borderWidth:2,
+        pointRadius:4,
+        pointBackgroundColor:'#10b981'
+      }]
+    },
+    options:co
+  });
+
+  // 7. Saved Archives List
   document.getElementById('archives-container').innerHTML=Object.keys(savedSessions).map(n=>`
     <div class="p-3 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center group hover:bg-white/10 transition">
-      <span class="text-[11px] font-bold cursor-pointer hover:text-sky-400 truncate pr-4" onclick="loadArchive('${n}')">${n}</span>
-      <button onclick="delArchive('${n}')" class="text-rose-900 group-hover:text-rose-500 font-black">x</button>
+      <span class="text-[11px] font-bold cursor-pointer hover:text-sky-400 truncate pr-4 text-slate-300" onclick="loadArchive('${n}')">${n}</span>
+      <button onclick="delArchive('${n}')" class="text-slate-600 hover:text-rose-500 font-bold transition">×</button>
     </div>`).join('');
+  
+  document.getElementById('no-archives').style.display = Object.keys(savedSessions).length ? 'none' : 'block';
 
   updatePlayerFilterBar();
 }
 
+// -- AI STRATEGIC INTEL ENGINE ------------------------------------------------
+function generateAIInsight(){
+  const status = document.getElementById('ai-status');
+  const output = document.getElementById('ai-output');
+  
+  status.innerText = "Analyzing matches...";
+  status.className = "badge-sky animate-pulse";
+  
+  output.innerHTML = `
+    <div class="flex flex-col gap-3 py-3 font-mono">
+      <div class="flex items-center gap-2">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="text-xs text-sky-400 font-bold uppercase tracking-wider ml-1">Analyzing shot vector spatial telemetry...</span>
+      </div>
+      <div class="h-2 w-full bg-slate-900/60 border border-white/5 rounded-full overflow-hidden relative">
+        <div class="scan-line h-full w-1/3 bg-gradient-to-r from-transparent via-sky-500 to-transparent"></div>
+      </div>
+    </div>
+  `;
+  
+  setTimeout(() => {
+    // 1. Gather numerical inputs from active match session
+    const ourShots = allShots.filter(s => s.team === teamName);
+    const oppShots = allShots.filter(s => s.team === 'Opponent');
+    const ourGoals = ourShots.filter(s => s.out === 'Goal').length;
+    const oppGoals = oppShots.filter(s => s.out === 'Goal').length;
+    const ourConv = ourShots.length ? Math.round(ourGoals/ourShots.length*100) : 0;
+    const oppConv = oppShots.length ? Math.round(oppGoals/oppShots.length*100) : 0;
+    
+    const ourMistakes = allShots.filter(s => s.team === 'Opponent' && s.type === 'Mistake');
+    
+    // Attacking origins distribution
+    const throughBallCount = ourShots.filter(s => s.type === 'Through Ball').length;
+    const crossCount = ourShots.filter(s => s.type === 'Cross').length;
+    const setPieceCount = ourShots.filter(s => s.type === 'Set Piece').length;
+    
+    // Spatial positioning coordinates
+    const ourFarRange = ourShots.filter(s => s.loc === 'Far Range' || s.loc === 'Outside Box').length;
+    const ourBoxShots = ourShots.filter(s => s.loc === 'Center Box' || s.loc === 'Left Box' || s.loc === 'Right Box').length;
+
+    // Compose dynamic, rule-based professional insights
+    let observation = "";
+    let threat = "";
+    let mistakesText = "";
+    let actions = [];
+
+    // Analytical Heuristics - Observations
+    if(ourShots.length === 0){
+      observation = "Our attacking unit has struggled to log shot attempts. Offensive spacing and progression through the midfield lines must be adjusted to test the goalkeeper.";
+      actions.push("Encourage central midfielders to advance higher and take medium-range shots from Outside Box.");
+    } else {
+      if(ourConv > 35) {
+        observation = `Excellent conversion rate (${ourConv}%). Our attacking structure is highly efficient. The positional distribution shows precise execution inside high-opportunity boxes.`;
+        actions.push("Maintain our high block to squeeze the opponent's build-up phase.");
+      } else if (ourFarRange > ourBoxShots) {
+        observation = `We are taking a high percentage of shots from long-range (${ourFarRange} from Outside Box/Far Range). We must prioritize lateral combinations to penetrate the penalty area before shooting.`;
+        actions.push("Instruct attackers to make decoy runs to create space in the Center Box for high-value targets.");
+      } else {
+        observation = `Logged ${ourShots.length} shot attempts with a ${ourConv}% conversion rate. Attack patterns indicate active progression, though finishing in tight areas remains a constraint.`;
+        actions.push("Prioritize high-percentage central targets instead of wide visual angle shots.");
+      }
+    }
+
+    // Heuristics - Threat Assessment
+    if(oppShots.length === 0){
+      threat = "The opponent has conceded total positional control. Our defensive structure remains untested but organized.";
+    } else {
+      if(oppGoals > 2) {
+        threat = `Extreme defensive vulnerability: conceding ${oppGoals} goals. The Opponent is finding space too easily between the lines. Tighter markings in our transition zones are urgent.`;
+        actions.push("Instruct defensive midfielders to drop deeper and protect the zone between central backs.");
+      } else if (oppShots.length > 5) {
+        threat = `The opponent is launching significant volume (${oppShots.length} attempts). Though their conversion rate is modest (${oppConv}%), their pressure highlights transitional vulnerabilities.`;
+        actions.push("Close down opposing wingers earlier on crosses to suppress attempt volume.");
+      } else {
+        threat = "Opponent attacking threat is moderate. Central blocks are keeping attempts outside dangerous target zones.";
+      }
+    }
+
+    // Heuristics - Turnovers and Mistakes
+    if (ourMistakes.length > 1) {
+      const uniquePlayers = [...new Set(ourMistakes.map(s => s.mistakePlayer).filter(Boolean))];
+      const playerStr = uniquePlayers.length ? ` (turnovers: ${uniquePlayers.join(', ')})` : "";
+      mistakesText = `Turnover metrics indicate defensive stress: we have conceded ${ourMistakes.length} opponent shots directly from our lost possession${playerStr}. Players are struggling to bypass high presses.`;
+      actions.push("Play wider in the initial build-up phase; minimize risk by bypassing the central pitch with direct switches.");
+    } else {
+      mistakesText = "Turnover metrics are low. Possession recovery and structural discipline during defensive transitions remain secure.";
+    }
+
+    // Complete fallback strategic action items if we don't have enough data
+    if(actions.length < 3){
+      actions.push("Ensure full-backs overlap to stretch the opponent's narrow back line.");
+      actions.push("Commit central runners during through-balls to exploit spaces in half-spaces.");
+    }
+
+    status.innerText = "Complete";
+    status.className = "badge-emerald";
+    showToast("AI coaching adjustments updated.");
+
+    // Render the beautiful, structured analytical summary
+    output.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="ai-insight" style="padding:14px;background:rgba(14,165,233,0.03);border-color:rgba(14,165,233,0.1)">
+          <p style="font-size:9px;font-weight:900;color:var(--sky);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px">1. Offensive Telemetry Analysis</p>
+          <p style="font-size:12px;color:#e2e8f0;line-height:1.6">${observation}</p>
+        </div>
+        <div class="ai-insight" style="padding:14px;background:rgba(244,63,94,0.03);border-color:rgba(244,63,94,0.1)">
+          <p style="font-size:9px;font-weight:900;color:var(--rose);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px">2. Opponent Threat Assessment</p>
+          <p style="font-size:12px;color:#e2e8f0;line-height:1.6">${threat}</p>
+        </div>
+        <div class="ai-insight" style="padding:14px;background:rgba(139,92,246,0.03);border-color:rgba(139,92,246,0.1)">
+          <p style="font-size:9px;font-weight:900;color:var(--violet);text-transform:uppercase;letter-spacing:.15em;margin-bottom:4px">3. Transition Turnover Metrics</p>
+          <p style="font-size:12px;color:#e2e8f0;line-height:1.6">${mistakesText}</p>
+        </div>
+        <div>
+          <p style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;font-family:'JetBrains Mono',monospace">✔ Halftime Tactical Adjustments:</p>
+          <ul style="list-style-type:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px">
+            ${actions.map((act, i) => `
+              <li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#cbd5e1;line-height:1.5">
+                <span style="color:var(--emerald);font-weight:bold;font-family:'JetBrains Mono',monospace">${i+1}.</span>
+                <span>${act}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      </div>
+    `;
+  }, 1200);
+}
+
+// -- ARCHIVES SESSION HANDLING ------------------------------------------------
 function saveSession(){
-  if(!currentUser)return;
-  const n=prompt('Session Name (e.g. vs North Penn H1):');
-  if(!n)return;
+  if(!currentUser) return;
+  const n=prompt('Enter Halftime Session Name (e.g. vs North Penn H1):');
+  if(!n) return;
   savedSessions[n]={data:[...allShots],date:new Date().toLocaleString()};
   localStorage.setItem(uKey(),JSON.stringify(savedSessions));
   updateUI();
+  showToast(`Session "${n}" saved to local archives.`);
 }
 
-function loadArchive(n){allShots=savedSessions[n].data;document.getElementById('sessionLabel').innerText=`Archive: ${n}`;updateUI();}
-function delArchive(n){if(confirm(`Delete ${n}?`)){delete savedSessions[n];localStorage.setItem(uKey(),JSON.stringify(savedSessions));updateUI();}}
+function loadArchive(n){
+  allShots=savedSessions[n].data;
+  document.getElementById('sessionLabel').innerText=`Archive: ${n}`;
+  updateUI();
+  showToast(`Loaded archive session: ${n}`, 'info');
+}
 
-// init
-switchTab('login'); updateUI();
+function delArchive(n){
+  if(confirm(`Delete saved session "${n}"?`)){
+    delete savedSessions[n];
+    localStorage.setItem(uKey(),JSON.stringify(savedSessions));
+    updateUI();
+    showToast(`Deleted archive: ${n}`, 'warn');
+  }
+}
+
+// -- STARTUP INITIALIZATION ---------------------------------------------------
+switchTab('login');
+updateUI();
 </script>
 </body>
 </html>
