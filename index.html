@@ -1004,7 +1004,11 @@ if(firebaseReady){
         currentEmail=user.email||'';
         
         // Load user's data package from Firestore
-        db.collection('users').doc(currentUser).get().then(doc => {
+        // Load user's data package from Firestore with a 3-second defensive timeout
+        const firestoreGet = db.collection('users').doc(currentUser).get();
+        const getTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Firestore timeout")), 3000));
+        
+        Promise.race([firestoreGet, getTimeout]).then(doc => {
           let hasCloudData = false;
           if (doc.exists) {
             const data = doc.data();
@@ -1060,7 +1064,7 @@ if(firebaseReady){
           showToast(`Signed in as ${user.email}`, 'info');
           showLoading(false);
         }).catch(err => {
-          console.error("Firestore fetch error, falling back to local cache:", err);
+          console.error("Firestore fetch error/timeout, falling back to local cache:", err);
           // Resilient Offline Cache Fallback
           teamName = localStorage.getItem(teamKey()) || user.displayName || 'My Team';
           try {
@@ -1400,230 +1404,271 @@ function setFilter(m){
 }
 
 function updateUI(){
-  const filterLabel=filterMode==='myteam'?teamName:filterMode;
-  let data=allShots.filter(s=>filterMode==='Both'||s.team===filterLabel);
-  
-  if(playerFilter!=='ALL'){
-    // Filter stats for our team focus players
-    data=data.filter(s=>(s.shooter===playerFilter && s.team===teamName) || (s.assister===playerFilter && s.team===teamName) || (s.team==='Opponent' && s.mistakePlayer===playerFilter));
-  }
-  
-  const goals=data.filter(s=>s.out==='Goal').length;
-  const target=data.filter(s=>s.out!=='Miss').length;
-  
-  // 1. KPI cards countup
-  document.getElementById('kpi-shots').innerText=data.length;
-  document.getElementById('kpi-target').innerText=target;
-  document.getElementById('kpi-goals').innerText=goals;
-  document.getElementById('kpi-conv').innerText=data.length?Math.round(goals/data.length*100)+'%':'0%';
-  
-  document.getElementById('filter-status').innerText=`Scope: ${filterLabel}${playerFilter!=='ALL'?' · '+playerFilter:''}`;
-
-  // 2. Render Live Logs
-  document.getElementById('table-body').innerHTML=data.slice().reverse().map(s=>`
-    <tr class="hover:bg-white/5 transition border-b border-white/5">
-      <td class="px-4 py-3 opacity-40 font-bold">${s.min}'</td>
-      <td class="px-4 py-3 font-bold ${s.team===teamName?'text-sky-400':'text-rose-500'} uppercase text-[10px] tracking-wider">${s.team}</td>
-      <td class="px-4 py-3">
-        <div class="font-bold text-slate-200">${s.shooter}</div>
-        ${s.assister?`<div class="text-[9px] text-amber-500 font-mono">↗ Assist: ${s.assister}</div>`:''}
-        ${s.mistakePlayer?`<div class="text-[9px] text-rose-500 font-mono">⚠ Error: ${s.mistakePlayer}</div>`:''}
-      </td>
-      <td class="px-4 py-3 uppercase tracking-tighter opacity-80 text-[10px] font-mono">${s.type}</td>
-      <td class="px-4 py-3 text-slate-500 text-[10px] font-mono">${s.loc}</td>
-      <td class="px-4 py-3 ${s.out==='Goal'?'text-emerald-400 font-bold':s.out==='On Target'?'text-violet-400':''} italic text-[10px]">${s.out}</td>
-      <td class="px-4 py-3 text-right"><button onclick="delShot(${s.id})" class="text-slate-700 hover:text-rose-500 font-bold px-2 text-sm transition">×</button></td>
-    </tr>`).join('');
-
-  // 3. Positional coordinates rendering
-  const pitch=document.getElementById('heatmap-pitch');
-  pitch.querySelectorAll('.shot-dot').forEach(d=>d.remove());
-  data.forEach(s=>{
-    const d=document.createElement('div');
-    d.className='shot-dot';
-    d.style.cssText=`left:${s.x}%;top:${s.y}%;background:${s.team===teamName?'var(--sky)':'var(--rose)'};box-shadow:0 0 10px ${s.team===teamName?'rgba(14,165,233,0.5)':'rgba(244,63,94,0.5)'}`;
-    if(s.out==='Goal'){
-      d.style.border='2px solid #fff';
-      d.style.width='15px';
-      d.style.height='15px';
-      d.style.boxShadow = `0 0 15px #fff, 0 0 10px ${s.team===teamName?'var(--sky)':'var(--rose)'}`;
+  try {
+    const filterLabel=filterMode==='myteam'?teamName:filterMode;
+    let data=allShots.filter(s=>filterMode==='Both'||s.team===filterLabel);
+    
+    if(playerFilter!=='ALL'){
+      // Filter stats for our team focus players
+      data=data.filter(s=>(s.shooter===playerFilter && s.team===teamName) || (s.assister===playerFilter && s.team===teamName) || (s.team==='Opponent' && s.mistakePlayer===playerFilter));
     }
-    d.title=`${s.min}' · ${s.shooter}${s.assister?' · ↗'+s.assister:''} · ${s.out}`;
-    pitch.appendChild(d);
-  });
+    
+    const goals=data.filter(s=>s.out==='Goal').length;
+    const target=data.filter(s=>s.out!=='Miss').length;
+    
+    // 1. KPI cards countup
+    const kpiShots = document.getElementById('kpi-shots');
+    const kpiTarget = document.getElementById('kpi-target');
+    const kpiGoals = document.getElementById('kpi-goals');
+    const kpiConv = document.getElementById('kpi-conv');
+    if (kpiShots) kpiShots.innerText = data.length;
+    if (kpiTarget) kpiTarget.innerText = target;
+    if (kpiGoals) kpiGoals.innerText = goals;
+    if (kpiConv) kpiConv.innerText = data.length ? Math.round(goals / data.length * 100) + '%' : '0%';
+    
+    const filterStatus = document.getElementById('filter-status');
+    if (filterStatus) filterStatus.innerText = `Scope: ${filterLabel}${playerFilter!=='ALL'?' · '+playerFilter:''}`;
 
-  // 4. Update Dynamic Roster Rankings
-  const topPlayersEl = document.getElementById('top-players');
-  const activePlayers = players.map(p => {
-    const pShots = allShots.filter(s => s.team === teamName && s.shooter === p);
-    const pGoals = pShots.filter(s => s.out === 'Goal').length;
-    const pAssists = allShots.filter(s => s.team === teamName && s.assister === p).length;
-    const pMistakes = allShots.filter(s => s.team === 'Opponent' && s.type === 'Mistake' && s.mistakePlayer === p).length;
-    const totalCon = pShots.length + pAssists + pMistakes;
-    return { name: p, goals: pGoals, assists: pAssists, shots: pShots.length, mistakes: pMistakes, totalCon };
-  }).filter(p => p.totalCon > 0);
-
-  // Score Formula: goals = 3, assists = 1.5, shots = 0.5, turnovers = -1
-  activePlayers.sort((a, b) => (b.goals * 3 + b.assists * 1.5 + b.shots * 0.5 - b.mistakes) - (a.goals * 3 + a.assists * 1.5 + a.shots * 0.5 - a.mistakes));
-
-  if (activePlayers.length === 0) {
-    topPlayersEl.innerHTML = `<div class="text-slate-600 text-xs text-center py-6 col-span-2">No statistics recorded for roster players. Log attempts to rank.</div>`;
-  } else {
-    topPlayersEl.innerHTML = activePlayers.slice(0, 4).map((p, idx) => {
-      const avatars = ['bg-sky-500/10 text-sky-400 border-sky-500/20', 'bg-violet-500/10 text-violet-400 border-violet-500/20', 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', 'bg-amber-500/10 text-amber-400 border-amber-500/20'];
-      const av = avatars[idx % avatars.length];
-      return `
-        <div class="player-card glass flex items-center justify-between p-3 rounded-xl border border-white/5">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${av} border">
-              ${idx + 1}
-            </div>
-            <div>
-              <p class="text-xs font-bold text-slate-200 truncate max-w-[80px]">${p.name}</p>
-              <p class="text-[8px] font-mono text-slate-500 uppercase tracking-widest">RANKED #${idx + 1}</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2.5 font-mono text-[9px]">
-            <span class="text-emerald-400 font-bold">${p.goals}G</span>
-            <span class="text-violet-400">${p.assists}A</span>
-            <span class="text-sky-400">${p.shots}S</span>
-            ${p.mistakes > 0 ? `<span class="text-rose-400 font-bold">${p.mistakes}E</span>` : ''}
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // 5. Update Mistake Tracker panel
-  const mistakes = allShots.filter(s => s.type === 'Mistake');
-  document.getElementById('mistake-count').innerText = `${mistakes.length} errors`;
-  const mistakeListEl = document.getElementById('mistake-list');
-  
-  if (mistakes.length === 0) {
-    mistakeListEl.innerHTML = `<p class="text-[11px] text-slate-600 text-center py-6">No turnover errors logged. Defensive transitions secure.</p>`;
-  } else {
-    mistakeListEl.innerHTML = mistakes.map(s => {
-      const isOpp = s.team === 'Opponent';
-      const responsible = isOpp ? s.mistakePlayer : s.shooter;
-      const txt = isOpp 
-        ? `<span class="text-rose-400 font-bold">${responsible || 'Team'}</span> turnover conceded opponent shot`
-        : `<span class="text-slate-400 font-bold">${responsible || 'Team'}</span> mistake preceding our shot`;
-      return `
-        <div class="flex items-center justify-between bg-rose-500/5 border border-rose-500/10 p-2.5 rounded-xl text-[10px] font-mono hover:bg-rose-500/8 transition">
-          <div class="flex items-center gap-2">
-            <span class="mistake-flag shrink-0">⚠ ${s.min}'</span>
-            <span class="text-slate-300 truncate max-w-[190px]">${txt} (${s.loc})</span>
-          </div>
-          <button onclick="delShot(${s.id})" class="text-slate-600 hover:text-rose-400 font-bold px-1">×</button>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // 6. Draw Chart.js diagrams
-  const co={
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{legend:{display:false}},
-    scales:{
-      y:{grid:{color:'rgba(255,255,255,.015)'},ticks:{color:'#475569',font:{family:'JetBrains Mono',size:9}}},
-      x:{ticks:{color:'#475569',font:{family:'JetBrains Mono',size:9}},grid:{display:false}}
+    // 2. Render Live Logs
+    const tblBody = document.getElementById('table-body');
+    if (tblBody) {
+      tblBody.innerHTML=data.slice().reverse().map(s=>`
+        <tr class="hover:bg-white/5 transition border-b border-white/5">
+          <td class="px-4 py-3 opacity-40 font-bold">${s.min}'</td>
+          <td class="px-4 py-3 font-bold ${s.team===teamName?'text-sky-400':'text-rose-500'} uppercase text-[10px] tracking-wider">${s.team}</td>
+          <td class="px-4 py-3">
+            <div class="font-bold text-slate-200">${s.shooter}</div>
+            ${s.assister?`<div class="text-[9px] text-amber-500 font-mono">↗ Assist: ${s.assister}</div>`:''}
+            ${s.mistakePlayer?`<div class="text-[9px] text-rose-500 font-mono">⚠ Error: ${s.mistakePlayer}</div>`:''}
+          </td>
+          <td class="px-4 py-3 uppercase tracking-tighter opacity-80 text-[10px] font-mono">${s.type}</td>
+          <td class="px-4 py-3 text-slate-500 text-[10px] font-mono">${s.loc}</td>
+          <td class="px-4 py-3 ${s.out==='Goal'?'text-emerald-400 font-bold':s.out==='On Target'?'text-violet-400':''} italic text-[10px]">${s.out}</td>
+          <td class="px-4 py-3 text-right"><button onclick="delShot(${s.id})" class="text-slate-700 hover:text-rose-500 font-bold px-2 text-sm transition">×</button></td>
+        </tr>`).join('');
     }
-  };
-  const doughnutCo={
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{
-      legend:{
-        display:true,
-        position:'bottom',
-        labels:{
-          color:'#94a3b8',
-          boxWidth:8,
-          padding:12,
-          font:{family:'JetBrains Mono',size:9}
+
+    // 3. Positional coordinates rendering
+    const pitch=document.getElementById('heatmap-pitch');
+    if (pitch) {
+      pitch.querySelectorAll('.shot-dot').forEach(d=>d.remove());
+      data.forEach(s=>{
+        const d=document.createElement('div');
+        d.className='shot-dot';
+        d.style.cssText=`left:${s.x}%;top:${s.y}%;background:${s.team===teamName?'var(--sky)':'var(--rose)'};box-shadow:0 0 10px ${s.team===teamName?'rgba(14,165,233,0.5)':'rgba(244,63,94,0.5)'}`;
+        if(s.out==='Goal'){
+          d.style.border='2px solid #fff';
+          d.style.width='15px';
+          d.style.height='15px';
+          d.style.boxShadow = `0 0 15px #fff, 0 0 10px ${s.team===teamName?'var(--sky)':'var(--rose)'}`;
         }
+        d.title=`${s.min}' · ${s.shooter}${s.assister?' · ↗'+s.assister:''} · ${s.out}`;
+        pitch.appendChild(d);
+      });
+    }
+
+    // 4. Update Dynamic Roster Rankings
+    const topPlayersEl = document.getElementById('top-players');
+    if (topPlayersEl) {
+      const activePlayers = players.map(p => {
+        const pShots = allShots.filter(s => s.team === teamName && s.shooter === p);
+        const pGoals = pShots.filter(s => s.out === 'Goal').length;
+        const pAssists = allShots.filter(s => s.team === teamName && s.assister === p).length;
+        const pMistakes = allShots.filter(s => s.team === 'Opponent' && s.type === 'Mistake' && s.mistakePlayer === p).length;
+        const totalCon = pShots.length + pAssists + pMistakes;
+        return { name: p, goals: pGoals, assists: pAssists, shots: pShots.length, mistakes: pMistakes, totalCon };
+      }).filter(p => p.totalCon > 0);
+
+      // Score Formula: goals = 3, assists = 1.5, shots = 0.5, turnovers = -1
+      activePlayers.sort((a, b) => (b.goals * 3 + b.assists * 1.5 + b.shots * 0.5 - b.mistakes) - (a.goals * 3 + a.assists * 1.5 + a.shots * 0.5 - a.mistakes));
+
+      if (activePlayers.length === 0) {
+        topPlayersEl.innerHTML = `<div class="text-slate-600 text-xs text-center py-6 col-span-2">No statistics recorded for roster players. Log attempts to rank.</div>`;
+      } else {
+        topPlayersEl.innerHTML = activePlayers.slice(0, 4).map((p, idx) => {
+          const avatars = ['bg-sky-500/10 text-sky-400 border-sky-500/20', 'bg-violet-500/10 text-violet-400 border-violet-500/20', 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', 'bg-amber-500/10 text-amber-400 border-amber-500/20'];
+          const av = avatars[idx % avatars.length];
+          return `
+            <div class="player-card glass flex items-center justify-between p-3 rounded-xl border border-white/5">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${av} border">
+                  ${idx + 1}
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-slate-200 truncate max-w-[80px]">${p.name}</p>
+                  <p class="text-[8px] font-mono text-slate-500 uppercase tracking-widest">RANKED #${idx + 1}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2.5 font-mono text-[9px]">
+                <span class="text-emerald-400 font-bold">${p.goals}G</span>
+                <span class="text-violet-400">${p.assists}A</span>
+                <span class="text-sky-400">${p.shots}S</span>
+                ${p.mistakes > 0 ? `<span class="text-rose-400 font-bold">${p.mistakes}E</span>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
       }
     }
-  };
-  const types=['Normal Shot','Through Ball','Cross','Set Piece','Mistake','Rebound'];
-  const locs=['Center Box','Left Box','Right Box','Outside Box','Outside the Pitch','Far Range'];
-  
-  if(tChart) tChart.destroy(); 
-  if(lChart) lChart.destroy();
-  if(oChart) oChart.destroy();
-  
-  // Create gorgeous custom HSL visual gradients
-  const ctxType = document.getElementById('chart-type').getContext('2d');
-  const gradientSky = ctxType.createLinearGradient(0, 0, 0, 200);
-  gradientSky.addColorStop(0, '#0ea5e9');
-  gradientSky.addColorStop(1, 'rgba(14,165,233,0.15)');
 
-  const ctxLoc = document.getElementById('chart-loc').getContext('2d');
-  const gradientEmerald = ctxLoc.createLinearGradient(0, 0, 0, 200);
-  gradientEmerald.addColorStop(0, 'rgba(16,185,129,0.22)');
-  gradientEmerald.addColorStop(1, 'rgba(16,185,129,0.01)');
-  
-  tChart=new Chart(ctxType,{
-    type:'bar',
-    data:{
-      labels:types,
-      datasets:[{
-        data:types.map(t=>data.filter(s=>s.type===t).length),
-        backgroundColor:gradientSky,
-        borderRadius:6,
-        barThickness:12
-      }]
-    },
-    options:co
-  });
+    // 5. Update Mistake Tracker panel
+    const mistakes = allShots.filter(s => s.type === 'Mistake');
+    const mistakeCount = document.getElementById('mistake-count');
+    if (mistakeCount) mistakeCount.innerText = `${mistakes.length} errors`;
+    const mistakeListEl = document.getElementById('mistake-list');
+    
+    if (mistakeListEl) {
+      if (mistakes.length === 0) {
+        mistakeListEl.innerHTML = `<p class="text-[11px] text-slate-600 text-center py-6">No turnover errors logged. Defensive transitions secure.</p>`;
+      } else {
+        mistakeListEl.innerHTML = mistakes.map(s => {
+          const isOpp = s.team === 'Opponent';
+          const responsible = isOpp ? s.mistakePlayer : s.shooter;
+          const txt = isOpp 
+            ? `<span class="text-rose-400 font-bold">${responsible || 'Team'}</span> turnover conceded opponent shot`
+            : `<span class="text-slate-400 font-bold">${responsible || 'Team'}</span> mistake preceding our shot`;
+          return `
+            <div class="flex items-center justify-between bg-rose-500/5 border border-rose-500/10 p-2.5 rounded-xl text-[10px] font-mono hover:bg-rose-500/8 transition">
+              <div class="flex items-center gap-2">
+                <span class="mistake-flag shrink-0">⚠ ${s.min}'</span>
+                <span class="text-slate-300 truncate max-w-[190px]">${txt} (${s.loc})</span>
+              </div>
+              <button onclick="delShot(${s.id})" class="text-slate-600 hover:text-rose-400 font-bold px-1">×</button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
 
-  const goalsCount = data.filter(s=>s.out==='Goal').length;
-  const onTargetCount = data.filter(s=>s.out==='On Target').length;
-  const missCount = data.filter(s=>s.out==='Miss').length;
-  
-  oChart=new Chart(document.getElementById('chart-outcome'),{
-    type:'doughnut',
-    data:{
-      labels:['Goals','On Target','Misses'],
-      datasets:[{
-        data:[goalsCount, onTargetCount, missCount],
-        backgroundColor:['#10b981','#8b5cf6','#f43f5e'],
-        borderWidth:0,
-        hoverOffset:4
-      }]
-    },
-    options:doughnutCo
-  });
-  
-  lChart=new Chart(ctxLoc,{
-    type:'line',
-    data:{
-      labels:locs,
-      datasets:[{
-        data:locs.map(l=>data.filter(s=>s.loc===l).length),
-        borderColor:'#10b981',
-        backgroundColor:gradientEmerald,
-        fill:true,
-        tension:.38,
-        borderWidth:2,
-        pointRadius:4,
-        pointBackgroundColor:'#10b981'
-      }]
-    },
-    options:co
-  });
+    // 6. Draw Chart.js diagrams (safely wrapped in try-catch in case Chart library is slow/failed)
+    try {
+      if (typeof Chart === 'undefined') {
+        console.warn("Chart.js library is not loaded yet.");
+      } else {
+        const co={
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            y:{grid:{color:'rgba(255,255,255,.015)'},ticks:{color:'#475569',font:{family:'JetBrains Mono',size:9}}},
+            x:{ticks:{color:'#475569',font:{family:'JetBrains Mono',size:9}},grid:{display:false}}
+          }
+        };
+        const doughnutCo={
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{
+            legend:{
+              display:true,
+              position:'bottom',
+              labels:{
+                color:'#94a3b8',
+                boxWidth:8,
+                padding:12,
+                font:{family:'JetBrains Mono',size:9}
+              }
+            }
+          }
+        };
+        const types=['Normal Shot','Through Ball','Cross','Set Piece','Mistake','Rebound'];
+        const locs=['Center Box','Left Box','Right Box','Outside Box','Outside the Pitch','Far Range'];
+        
+        if(tChart) tChart.destroy(); 
+        if(lChart) lChart.destroy();
+        if(oChart) oChart.destroy();
+        
+        const chartTypeEl = document.getElementById('chart-type');
+        if (chartTypeEl) {
+          const ctxType = chartTypeEl.getContext('2d');
+          const gradientSky = ctxType.createLinearGradient(0, 0, 0, 200);
+          gradientSky.addColorStop(0, '#0ea5e9');
+          gradientSky.addColorStop(1, 'rgba(14,165,233,0.15)');
+          
+          tChart=new Chart(ctxType,{
+            type:'bar',
+            data:{
+              labels:types,
+              datasets:[{
+                data:types.map(t=>data.filter(s=>s.type===t).length),
+                backgroundColor:gradientSky,
+                borderRadius:6,
+                barThickness:12
+              }]
+            },
+            options:co
+          });
+        }
 
-  // 7. Saved Archives List
-  document.getElementById('archives-container').innerHTML=Object.keys(savedSessions).map(n=>`
-    <div class="p-3 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center group hover:bg-white/10 transition">
-      <span class="text-[11px] font-bold cursor-pointer hover:text-sky-400 truncate pr-4 text-slate-300" onclick="loadArchive('${n}')">${n}</span>
-      <button onclick="delArchive('${n}')" class="text-slate-600 hover:text-rose-500 font-bold transition">×</button>
-    </div>`).join('');
-  
-  document.getElementById('no-archives').style.display = Object.keys(savedSessions).length ? 'none' : 'block';
+        const goalsCount = data.filter(s=>s.out==='Goal').length;
+        const onTargetCount = data.filter(s=>s.out==='On Target').length;
+        const missCount = data.filter(s=>s.out==='Miss').length;
+        
+        const chartOutcomeEl = document.getElementById('chart-outcome');
+        if (chartOutcomeEl) {
+          oChart=new Chart(chartOutcomeEl,{
+            type:'doughnut',
+            data:{
+              labels:['Goals','On Target','Misses'],
+              datasets:[{
+                data:[goalsCount, onTargetCount, missCount],
+                backgroundColor:['#10b981','#8b5cf6','#f43f5e'],
+                borderWidth:0,
+                hoverOffset:4
+              }]
+            },
+            options:doughnutCo
+          });
+        }
+        
+        const chartLocEl = document.getElementById('chart-loc');
+        if (chartLocEl) {
+          const ctxLoc = chartLocEl.getContext('2d');
+          const gradientEmerald = ctxLoc.createLinearGradient(0, 0, 0, 200);
+          gradientEmerald.addColorStop(0, 'rgba(16,185,129,0.22)');
+          gradientEmerald.addColorStop(1, 'rgba(16,185,129,0.01)');
+          
+          lChart=new Chart(ctxLoc,{
+            type:'line',
+            data:{
+              labels:locs,
+              datasets:[{
+                data:locs.map(l=>data.filter(s=>s.loc===l).length),
+                borderColor:'#10b981',
+                backgroundColor:gradientEmerald,
+                fill:true,
+                tension:.38,
+                borderWidth:2,
+                pointRadius:4,
+                pointBackgroundColor:'#10b981'
+              }]
+            },
+            options:co
+          });
+        }
+      }
+    } catch (chartErr) {
+      console.warn("Chart rendering failed defensively:", chartErr);
+    }
 
-  updatePlayerFilterBar();
+    // 7. Saved Archives List
+    const archivesContainer = document.getElementById('archives-container');
+    if (archivesContainer) {
+      archivesContainer.innerHTML=Object.keys(savedSessions).map(n=>`
+        <div class="p-3 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center group hover:bg-white/10 transition">
+          <span class="text-[11px] font-bold cursor-pointer hover:text-sky-400 truncate pr-4 text-slate-300" onclick="loadArchive('${n}')">${n}</span>
+          <button onclick="delArchive('${n}')" class="text-slate-600 hover:text-rose-500 font-bold transition">×</button>
+        </div>`).join('');
+    }
+    
+    const noArchivesEl = document.getElementById('no-archives');
+    if (noArchivesEl) {
+      noArchivesEl.style.display = Object.keys(savedSessions).length ? 'none' : 'block';
+    }
+
+    updatePlayerFilterBar();
+  } catch (uiErr) {
+    console.error("Defensive updateUI failed:", uiErr);
+  }
 }
 
 // -- AI STRATEGIC INTEL ENGINE ------------------------------------------------
