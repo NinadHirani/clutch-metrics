@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -668,6 +669,45 @@ footer{border-top:1px solid rgba(255,255,255,.04)}
   </div>
 </div>
 
+<!-- ======== HALFTIME REPORT & TOP PERFORMERS DIALOG ======== -->
+<div id="summary-modal" class="modal">
+  <div class="glass glow-emerald" style="padding:32px;border-radius:28px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;position:relative">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--emerald),var(--sky),var(--violet))"></div>
+    <div class="scan-line"></div>
+    
+    <div style="text-align:center;margin-bottom:24px">
+      <span class="badge-emerald" style="margin-bottom:8px;display:inline-block">🏆 Halftime Performance report</span>
+      <h2 class="display text-emerald-400" style="font-size:38px;line-height:1">SESSION COMPLETE</h2>
+      <p id="summary-session-name" class="mono" style="font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:.15em;margin-top:4px">vs Opponent</p>
+    </div>
+
+    <!-- Top 3 Performers Container -->
+    <p class="section-header">🏆 TOP CLUTCH PERFORMERS</p>
+    <div id="summary-players-list" style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+      <!-- Dynamic Top 3 Player Cards go here -->
+    </div>
+
+    <!-- Team Summary Stats Grid -->
+    <p class="section-header">📊 HALF STATS SUMMARY</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);padding:14px;border-radius:16px;margin-bottom:24px;text-align:center">
+      <div>
+        <p class="mono" style="font-size:9px;color:#475569;text-transform:uppercase">Goals</p>
+        <p id="summary-goals" class="display text-emerald-400" style="font-size:24px;line-height:1.2">0</p>
+      </div>
+      <div>
+        <p class="mono" style="font-size:9px;color:#475569;text-transform:uppercase">Shots On-Target</p>
+        <p id="summary-shots" class="display text-sky-400" style="font-size:24px;line-height:1.2">0</p>
+      </div>
+      <div>
+        <p class="mono" style="font-size:9px;color:#475569;text-transform:uppercase">Conv %</p>
+        <p id="summary-conv" class="display text-amber-500" style="font-size:24px;line-height:1.2">0%</p>
+      </div>
+    </div>
+
+    <button onclick="closeModal('summary-modal')" class="btn-emerald" style="width:100%">Return to Cockpit</button>
+  </div>
+</div>
+
 <!-- =========================================================================== -->
 <!-- ======================== APPLICATION JAVASCRIPT =========================== -->
 <!-- =========================================================================== -->
@@ -685,33 +725,99 @@ const firebaseConfig={
   measurementId:'G-HCQP3YG37B'
 };
 const firebaseReady=!Object.values(firebaseConfig).some(v=>String(v).includes('YOUR_'));
-let auth=null;
+let auth=null, db=null;
 
 const uKey=()=>`cm_data_${currentUser}`;
 const pKey=()=>`cm_players_${currentUser}`;
 const teamKey=()=>`cm_team_${currentUser}`;
 
+// -- CLOUD COMPATIBLE SYNC FUNCTION -------------------------------------------
+async function syncToCloud() {
+  if (!db || !currentUser) return;
+  try {
+    await db.collection('users').doc(currentUser).set({
+      teamName: teamName,
+      players: players,
+      savedSessions: savedSessions,
+      allShots: allShots,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (err) {
+    console.error("Firestore cloud sync failed:", err);
+  }
+}
+
 // -- FIREBASE STATE INITIALIZATION --------------------------------------------
 if(firebaseReady){
   firebase.initializeApp(firebaseConfig);
   auth=firebase.auth();
+  db=firebase.firestore();
+  
+  // Enable offline persistence for better cache resilience
+  db.enablePersistence().catch(err => {
+    console.warn("Firestore offline persistence not enabled:", err.code);
+  });
+
   auth.onAuthStateChanged(user=>{
     if(user){
       currentUser=user.uid;
       currentEmail=user.email||'';
-      teamName=localStorage.getItem(teamKey())||user.displayName||'My Team';
-      savedSessions=JSON.parse(localStorage.getItem(uKey())||'{}');
-      players=JSON.parse(localStorage.getItem(pKey())||'[]');
-      document.getElementById('auth-screen').classList.add('hidden');
-      document.getElementById('lu').value=currentEmail;
-      applyTeamName(); 
-      updateUI();
-      showToast(`Signed in as ${user.email}`, 'info');
+      
+      // Load user's data package from Firestore
+      db.collection('users').doc(currentUser).get().then(doc => {
+        let hasCloudData = false;
+        if (doc.exists) {
+          const data = doc.data();
+          if (data) {
+            hasCloudData = true;
+            if (data.teamName !== undefined) teamName = data.teamName;
+            if (data.players !== undefined) players = data.players;
+            if (data.savedSessions !== undefined) savedSessions = data.savedSessions;
+            if (data.allShots !== undefined) allShots = data.allShots;
+          }
+        }
+        
+        // Fallback & Migration: If Firestore doc doesn't exist, migrate from local storage
+        if (!hasCloudData) {
+          teamName = localStorage.getItem(teamKey()) || user.displayName || 'My Team';
+          savedSessions = JSON.parse(localStorage.getItem(uKey()) || '{}');
+          players = JSON.parse(localStorage.getItem(pKey()) || '[]');
+          allShots = JSON.parse(localStorage.getItem('cm_active_'+currentUser) || '[]');
+          
+          // Push local telemetry up to the cloud doc immediately
+          syncToCloud();
+        } else {
+          // Mirror state to local cache for offline safety
+          localStorage.setItem(teamKey(), teamName);
+          localStorage.setItem(uKey(), JSON.stringify(savedSessions));
+          localStorage.setItem(pKey(), JSON.stringify(players));
+          localStorage.setItem('cm_active_'+currentUser, JSON.stringify(allShots));
+        }
+        
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('lu').value=currentEmail;
+        applyTeamName(); 
+        updateUI();
+        showToast(`Signed in as ${user.email}`, 'info');
+      }).catch(err => {
+        console.error("Firestore fetch error, falling back to local cache:", err);
+        // Resilient Offline Cache Fallback
+        teamName = localStorage.getItem(teamKey()) || user.displayName || 'My Team';
+        savedSessions = JSON.parse(localStorage.getItem(uKey()) || '{}');
+        players = JSON.parse(localStorage.getItem(pKey()) || '[]');
+        allShots = JSON.parse(localStorage.getItem('cm_active_'+currentUser) || '[]');
+        
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('lu').value=currentEmail;
+        applyTeamName(); 
+        updateUI();
+        showToast(`Signed in (Offline Cache)`, 'info');
+      });
       return;
     }
     currentUser=null; currentEmail=''; teamName='My Team'; allShots=[]; savedSessions={}; players=[]; playerFilter='ALL'; filterMode='myteam';
     document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('auth-help').innerText='Log in using Email & Password. Roster data syncs automatically.';
+    document.getElementById('auth-help').innerText='Log in using Email & Password. Roster and metrics sync automatically across all devices.';
     applyTeamName(); 
     updateUI();
   });
@@ -752,7 +858,7 @@ function doLogin(){
 function doLoginGoogle(){
   if(!auth){showToast('Firebase not initialized.', 'warn');return;}
   const provider=new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(err=>showToast('Google auth cancelled: '+err.message, 'warn'));
+  auth.signInWithRedirect(provider).catch(err=>showToast('Google auth error: '+err.message, 'warn'));
 }
 
 async function doSignup(){
@@ -807,7 +913,10 @@ function addPlayer(){
   const inp=document.getElementById('new-player'), name=inp.value.trim();
   if(!name||players.includes(name))return;
   players.push(name); inp.value='';
-  if(currentUser) localStorage.setItem(pKey(),JSON.stringify(players));
+  if(currentUser) {
+    localStorage.setItem(pKey(),JSON.stringify(players));
+    syncToCloud();
+  }
   renderPlayerList(); 
   refreshPlayerSelects(); 
   updatePlayerFilterBar();
@@ -817,7 +926,10 @@ function addPlayer(){
 function removePlayer(name){
   players=players.filter(p=>p!==name);
   if(playerFilter===name) playerFilter='ALL';
-  if(currentUser) localStorage.setItem(pKey(),JSON.stringify(players));
+  if(currentUser) {
+    localStorage.setItem(pKey(),JSON.stringify(players));
+    syncToCloud();
+  }
   renderPlayerList(); 
   refreshPlayerSelects(); 
   updatePlayerFilterBar(); 
@@ -947,6 +1059,11 @@ function logShot(){
     y:!isMine?100-(z.y+(Math.random()*4-2)):z.y+(Math.random()*4-2)
   });
   
+  if(currentUser) {
+    localStorage.setItem('cm_active_'+currentUser, JSON.stringify(allShots));
+    syncToCloud();
+  }
+  
   closeModal('shot-modal'); 
   updateUI();
   showToast(`Event logged: ${team} shot (${outcome}).`);
@@ -954,6 +1071,10 @@ function logShot(){
 
 function delShot(id){
   allShots=allShots.filter(s=>s.id!==id);
+  if(currentUser) {
+    localStorage.setItem('cm_active_'+currentUser, JSON.stringify(allShots));
+    syncToCloud();
+  }
   updateUI();
   showToast('Event removed from session logs.', 'warn');
 }
@@ -1279,15 +1400,117 @@ function generateAIInsight(){
   }, 1200);
 }
 
+// -- HALFTIME SUMMARY & PERFORMERS ANALYTICS ----------------------------------
+function showHalftimeSummary(sessionName) {
+  // 1. Set session header
+  document.getElementById('summary-session-name').innerText = sessionName.toUpperCase();
+
+  // 2. Compute team aggregates for My Team
+  const ourShots = allShots.filter(s => s.team === teamName);
+  const ourGoals = ourShots.filter(s => s.out === 'Goal').length;
+  const ourTarget = ourShots.filter(s => s.out !== 'Miss').length;
+  const convRate = ourShots.length ? Math.round((ourGoals / ourShots.length) * 100) : 0;
+
+  document.getElementById('summary-goals').innerText = ourGoals;
+  document.getElementById('summary-shots').innerText = ourTarget;
+  document.getElementById('summary-conv').innerText = convRate + '%';
+
+  // 3. Compute ratings for all roster players
+  const playerStats = players.map(p => {
+    const pShots = allShots.filter(s => s.team === teamName && s.shooter === p);
+    const pGoals = pShots.filter(s => s.out === 'Goal').length;
+    const pAssists = allShots.filter(s => s.team === teamName && s.assister === p).length;
+    const pMistakes = allShots.filter(s => s.team === 'Opponent' && s.type === 'Mistake' && s.mistakePlayer === p).length;
+    const rating = (pGoals * 3.0) + (pAssists * 1.5) + (pShots.length * 0.5) - (pMistakes * 1.0);
+    return { name: p, goals: pGoals, assists: pAssists, shots: pShots.length, mistakes: pMistakes, rating };
+  });
+
+  playerStats.sort((a, b) => b.rating - a.rating);
+
+  // Take top 3 players who had positive contributions
+  const top3 = playerStats.filter(p => p.rating > 0 || p.goals > 0 || p.assists > 0 || p.shots > 0).slice(0, 3);
+
+  const container = document.getElementById('summary-players-list');
+  if (top3.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-8 bg-white/5 border border-white/5 rounded-2xl text-slate-500 text-xs">
+        <span class="text-2xl block mb-2">⚽</span>
+        No direct shot contributions recorded for roster players this half.
+      </div>
+    `;
+  } else {
+    const medallicColors = [
+      'bg-amber-400/10 text-amber-400 border-amber-400/30',
+      'bg-slate-300/10 text-slate-300 border-slate-300/30',
+      'bg-amber-700/10 text-amber-600 border-amber-700/20'
+    ];
+    const medallicLabels = ['GOLD MEDALIST', 'SILVER MEDALIST', 'BRONZE MEDALIST'];
+
+    container.innerHTML = top3.map((p, idx) => {
+      const col = medallicColors[idx] || 'bg-white/5 text-slate-300 border-white/5';
+      const label = medallicLabels[idx] || `RANKED #${idx + 1}`;
+
+      // Custom impact summary heuristics
+      let impact = "Solid team contribution, maintaining structural presence.";
+      if (p.goals >= 2) {
+        impact = "Clinical offensive spearhead. Carried the team's attack with clinical finishes.";
+      } else if (p.goals > 0 && p.assists > 0) {
+        impact = "Outstanding all-round offensive link. Drove play and scored under pressure.";
+      } else if (p.assists >= 2) {
+        impact = "Prime transitional playmaker. Masterfully orchestrated goals for team members.";
+      } else if (p.goals > 0) {
+        impact = "Crucial final-third threat. Converted key shot options inside dangerous zones.";
+      } else if (p.assists > 0) {
+        impact = "Creative build-up assister. Set up attacking options with smart transitional vision.";
+      } else if (p.shots >= 3) {
+        impact = "High attempt volume target. Kept defensive lines pinned and under pressure.";
+      }
+
+      return `
+        <div class="player-card glass flex items-center justify-between p-4 rounded-2xl border border-white/5">
+          <div style="display:flex;align-items:center;gap:12px;width:100%">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${col} border shrink-0">
+              ${idx + 1}
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                <span class="text-sm font-bold text-slate-200 truncate">${p.name}</span>
+                <span class="badge-sky" style="font-size:8px;padding:1px 6px">${p.rating.toFixed(1)} PTS</span>
+              </div>
+              <p class="mono text-[8px] text-slate-500 uppercase tracking-widest mt-0.5">${label}</p>
+              <p class="text-[11px] text-slate-400 mt-1.5 italic line-clamp-2">${impact}</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-family:'JetBrains Mono',monospace;font-size:9px;white-space:nowrap;margin-left:12px" class="shrink-0 text-right">
+            <span class="text-emerald-400 font-bold">${p.goals} Goals</span>
+            <span class="text-violet-400">${p.assists} Assists</span>
+            <span class="text-sky-400">${p.shots} Shots</span>
+            ${p.mistakes > 0 ? `<span class="text-rose-400 font-bold">${p.mistakes} Errors</span>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  openModal('summary-modal');
+}
+
 // -- ARCHIVES SESSION HANDLING ------------------------------------------------
 function saveSession(){
-  if(!currentUser) return;
+  if(!currentUser) {
+    showToast('You must be logged in to save halftime archives.', 'warn');
+    return;
+  }
   const n=prompt('Enter Halftime Session Name (e.g. vs North Penn H1):');
   if(!n) return;
   savedSessions[n]={data:[...allShots],date:new Date().toLocaleString()};
   localStorage.setItem(uKey(),JSON.stringify(savedSessions));
+  syncToCloud();
   updateUI();
-  showToast(`Session "${n}" saved to local archives.`);
+  showToast(`Session "${n}" saved to cloud archives.`);
+  
+  // Automatically showcase halftime reports & Top 3 players
+  showHalftimeSummary(n);
 }
 
 function loadArchive(n){
@@ -1301,6 +1524,7 @@ function delArchive(n){
   if(confirm(`Delete saved session "${n}"?`)){
     delete savedSessions[n];
     localStorage.setItem(uKey(),JSON.stringify(savedSessions));
+    syncToCloud();
     updateUI();
     showToast(`Deleted archive: ${n}`, 'warn');
   }
