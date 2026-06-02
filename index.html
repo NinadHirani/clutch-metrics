@@ -781,6 +781,16 @@ if(firebaseReady){
     console.warn("Firestore offline persistence not enabled:", err.code);
   });
 
+  // Handle and catch Google Redirect Auth errors on redirect back
+  auth.getRedirectResult().then(result => {
+    if (result && result.user) {
+      showToast(`Google Sign-In successful!`, 'ok');
+    }
+  }).catch(err => {
+    console.error("Google Redirect Auth Error:", err);
+    showToast(`Google Sign-In failed: ${err.message}`, 'warn');
+  });
+
   auth.onAuthStateChanged(user=>{
     if(user){
       currentUser=user.uid;
