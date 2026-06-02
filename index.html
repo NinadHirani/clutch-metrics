@@ -260,9 +260,79 @@ footer{border-top:1px solid rgba(255,255,255,.04)}
 .toggle-wrap{display:flex;background:rgba(5,10,25,0.85);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:4px;gap:2px}
 .top-bar{background:rgba(2,8,19,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.05);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
 .chart-wrap{position:relative;width:100%;height:220px}
+
+/* FULLSCREEN LOADING SCREEN OVERLAY */
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 250;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
+  padding: 24px;
+}
+#loading-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+@keyframes loadingSweep {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
 </style>
 </head>
 <body>
+
+<!-- ======== FULLSCREEN LOADING SCREEN OVERLAY ======== -->
+<div id="loading-screen">
+  <!-- Ambient glows -->
+  <div style="position:fixed;top:15%;left:15%;width:450px;height:450px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,0.08),transparent 70%);pointer-events:none;animation:pulseDot 7s ease-in-out infinite"></div>
+  <div style="position:fixed;bottom:15%;right:15%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,0.06),transparent 70%);pointer-events:none;animation:pulseDot 9s ease-in-out infinite 0.5s"></div>
+
+  <div class="glass glow-sky" style="width:100%;max-width:440px;border-radius:28px;padding:40px;position:relative;overflow:hidden;text-align:center">
+    <div class="scan-line"></div>
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sky),var(--violet),var(--emerald))"></div>
+
+    <div style="position:relative;width:120px;height:120px;margin:0 auto 24px">
+      <!-- Pulsating and rotating outer ring -->
+      <div class="orbit-ring" style="width:116px;height:116px;top:50%;left:50%;animation-duration:12s">
+        <div class="orbit-dot"></div>
+        <div class="orbit-dot-2"></div>
+      </div>
+      <!-- Spinning 3D soccer ball -->
+      <div class="ball-wrap" style="width:80px;height:80px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
+        <div class="ball-glow"></div>
+        <div class="ball-3d">
+          <svg class="ball-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="96" fill="#dde4ed" stroke="#94a3b8" stroke-width="1.5"/>
+            <polygon points="100,28 120,42 114,65 86,65 80,42" fill="#151d30" stroke="#334155" stroke-width="1"/>
+            <polygon points="148,72 168,90 160,114 138,118 128,96" fill="#151d30" stroke="#334155" stroke-width="1"/>
+            <polygon points="52,72 72,96 62,118 40,114 32,90" fill="#151d30" stroke="#334155" stroke-width="1"/>
+            <polygon points="68,148 90,138 110,138 132,148 120,172 80,172" fill="#151d30" stroke="#334155" stroke-width="1"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="display" style="font-size:32px;color:var(--sky);line-height:1;margin-bottom:6px;letter-spacing:0.06em">CLUTCH METRICS</h2>
+    <p class="mono" style="font-size:9px;color:rgba(14,165,233,0.5);letter-spacing:.25em;text-transform:uppercase;margin-bottom:28px">PRESSURE CREATES LEGENDS</p>
+
+    <!-- Sleek progress container -->
+    <div style="background:rgba(5,10,25,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:16px 20px;text-align:left">
+      <span class="mono" style="font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.15em;display:block;margin-bottom:6px">Initializing Tactical Node</span>
+      <div id="loading-status-text" class="mono" style="font-size:12px;color:#f1f5f9;height:36px;transition:opacity 0.2s ease-in-out;line-height:1.4">Initializing Tactical Core...</div>
+      
+      <!-- Linear loader sweep -->
+      <div style="width:100%;height:3px;background:rgba(255,255,255,0.05);border-radius:99px;position:relative;overflow:hidden;margin-top:12px">
+        <div style="position:absolute;top:0;left:-50%;width:50%;height:100%;background:linear-gradient(90deg,transparent,var(--sky),transparent);animation:loadingSweep 1.8s ease-in-out infinite"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ======== HUD TOAST DRAWER ======== -->
 <div id="toast-wrap"></div>
@@ -812,6 +882,57 @@ footer{border-top:1px solid rgba(255,255,255,.04)}
 <!-- ======================== APPLICATION JAVASCRIPT =========================== -->
 <!-- =========================================================================== -->
 <script>
+// -- PREMIUM FULLSCREEN LOADING CONTROLLER ------------------------------------
+const loadingTexts = [
+  "Initializing Tactical Core...",
+  "Calibrating Spatial Pitch Telemetry...",
+  "Syncing Cloud Roster Databases...",
+  "Analyzing Shot Outcome Formations...",
+  "Optimizing Positional Conversion Grids...",
+  "Synthesizing Automated AI Coaching Strategies...",
+  "Assembling Roster Metrics Matrix...",
+  "Preparing Digital Halftime Strategy Board..."
+];
+
+let loadingInterval = null;
+let currentTextIdx = 0;
+
+function showLoading(show, customMessage = null) {
+  const ls = document.getElementById('loading-screen');
+  const txt = document.getElementById('loading-status-text');
+  if (!ls) return;
+
+  if (show) {
+    ls.classList.remove('hidden');
+    currentTextIdx = 0;
+    if (txt) txt.innerText = customMessage || loadingTexts[0];
+    
+    if (loadingInterval) clearInterval(loadingInterval);
+    
+    if (!customMessage) {
+      loadingInterval = setInterval(() => {
+        currentTextIdx = (currentTextIdx + 1) % loadingTexts.length;
+        if (txt) {
+          txt.style.opacity = 0;
+          setTimeout(() => {
+            txt.innerText = loadingTexts[currentTextIdx];
+            txt.style.opacity = 1;
+          }, 200);
+        }
+      }, 1500);
+    }
+  } else {
+    ls.classList.add('hidden');
+    if (loadingInterval) {
+      clearInterval(loadingInterval);
+      loadingInterval = null;
+    }
+  }
+}
+
+// Start the loader immediately on script parse
+showLoading(true);
+
 // -- APPLICATION STATE VARIABLES ----------------------------------------------
 let currentUser=null, currentEmail='', teamName='My Team', allShots=[], filterMode='myteam', savedSessions={}, players=[], playerFilter='ALL', tChart, lChart, oChart;
 
@@ -937,6 +1058,7 @@ if(firebaseReady){
 
           updateUI();
           showToast(`Signed in as ${user.email}`, 'info');
+          showLoading(false);
         }).catch(err => {
           console.error("Firestore fetch error, falling back to local cache:", err);
           // Resilient Offline Cache Fallback
@@ -967,6 +1089,7 @@ if(firebaseReady){
 
           updateUI();
           showToast(`Signed in (Offline Cache)`, 'info');
+          showLoading(false);
         });
         return;
       }
@@ -981,13 +1104,16 @@ if(firebaseReady){
       document.getElementById('auth-help').innerText='Log in using Email & Password. Roster and metrics sync automatically across all devices.';
       applyTeamName(); 
       updateUI();
+      showLoading(false);
     });
   } catch (err) {
     console.error("Firebase auth/db bootstrapping failed:", err);
+    showLoading(false);
   }
 }
 } else {
   document.addEventListener('DOMContentLoaded',()=>{
+    showLoading(false);
     const help=document.getElementById('auth-help');
     if(help) help.innerText='Firebase credentials missing in static header setup.';
   });
@@ -1026,13 +1152,21 @@ function doLogin(){
   if(!auth){showToast('Firebase initialization error.', 'warn');return;}
   const email=document.getElementById('lu').value.trim(), password=document.getElementById('lp').value;
   document.getElementById('lerr').classList.remove('show');
-  auth.signInWithEmailAndPassword(email,password).catch(()=>document.getElementById('lerr').classList.add('show'));
+  showLoading(true, "Verifying Tactical Credentials...");
+  auth.signInWithEmailAndPassword(email,password).catch(()=>{
+    showLoading(false);
+    document.getElementById('lerr').classList.add('show');
+  });
 }
 
 function doLoginGoogle(){
   if(!auth){showToast('Firebase not initialized.', 'warn');return;}
   const provider=new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider).catch(err=>showToast('Google auth error: '+err.message, 'warn'));
+  showLoading(true, "Redirecting to Google Secure Login...");
+  auth.signInWithRedirect(provider).catch(err=>{
+    showLoading(false);
+    showToast('Google auth error: '+err.message, 'warn');
+  });
 }
 
 async function doSignup(){
@@ -1043,6 +1177,7 @@ async function doSignup(){
   if(p!==p2){document.getElementById('sperr').classList.add('show');ok=false;}
   if(!ok||!u||!p)return;
   document.getElementById('suerr').classList.remove('show');
+  showLoading(true, "Assembling Team Account...");
   try{
     const cred=await auth.createUserWithEmailAndPassword(u,p);
     await cred.user.updateProfile({displayName:team});
@@ -1051,6 +1186,7 @@ async function doSignup(){
     showToast('Sign up successful! Entering match hub...');
     switchTab('login');
   }catch(err){
+    showLoading(false);
     document.getElementById('suerr').classList.add('show');
   }
 }
@@ -1061,6 +1197,7 @@ function doLogout(){
     updateUI();
     return;
   }
+  showLoading(true, "Archiving Tactical Data...");
   auth.signOut();
   showToast('Logged out of telemetry session.', 'info');
 }
