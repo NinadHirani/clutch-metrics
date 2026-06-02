@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clutch Metrics | Halftime Tactical Hub</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore-compat.js"></script>
@@ -168,9 +168,64 @@ footer{border-top:1px solid rgba(255,255,255,.04)}
 .main-grid{display:grid;grid-template-columns:1fr 350px;gap:20px;align-items:start}
 .charts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .top-players-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* VIEWPORT CONTAINED CONSOLE LAYOUT FOR DESKTOP */
+@media(min-width:1025px){
+  body {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .top-bar {
+    flex-shrink: 0;
+    z-index: 100;
+  }
+  #pf-bar {
+    flex-shrink: 0;
+  }
+  .app-pad {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    padding: 16px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .main-workspace {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .main-workspace > div {
+    height: 100%;
+  }
+  footer {
+    display: none !important; /* Hide footer on 100vh desktop to maximize space */
+  }
+}
+
 @media(max-width:1024px){
   .main-grid{grid-template-columns:1fr}
   .charts-grid{grid-template-columns:1fr 1fr}
+  .main-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .main-workspace > div {
+    height: auto !important;
+  }
+  /* Constrain scrolling containers on mobile for better scroll experience */
+  #top-players, #table-body-scroll, #mistake-list, #ai-output, #w-tab-archives {
+    max-height: 300px;
+    overflow-y: auto;
+  }
 }
 @media(max-width:680px){
   .app-pad{padding:14px}
@@ -437,153 +492,175 @@ footer{border-top:1px solid rgba(255,255,255,.04)}
   <!-- MAIN HUD PANELS -->
   <div class="app-pad">
 
-    <!-- ======== DYNAMIC WELCOMING BANNER ======== -->
-    <div id="welcoming-banner" class="card glass glow-sky mb-6" style="padding:24px;position:relative;overflow:hidden;border-color:rgba(14,165,233,0.12)">
+    <!-- ======== COMPACT COMBINED CONTROL BAR (HUD & KPIs) ======== -->
+    <div id="welcoming-banner" class="card glass glow-sky flex justify-between items-center px-6 py-4 mb-4 gap-6 shrink-0" style="border-radius:16px;border-color:rgba(14,165,233,0.12)">
       <div style="position:absolute;right:0;top:0;bottom:0;width:300px;background:radial-gradient(circle at right,rgba(14,165,233,0.06),transparent 70%);pointer-events:none"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;position:relative;z-index:2">
-        <div>
-          <span id="welcoming-date" class="badge-sky" style="margin-bottom:8px;display:inline-block">MATCHDAY: LOADING...</span>
-          <h2 id="welcoming-coach" class="display" style="font-size:36px;line-height:1.1;color:#fff">WELCOME BACK, COACH!</h2>
-          <p style="color:#94a3b8;font-size:13px;margin-top:4px">Telemetry active. Review spatial coordinate vectors and player performance indicators.</p>
+      <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:2">
+        <div class="ball-wrap" style="width:36px;height:36px;flex-shrink:0;position:relative">
+          <div class="ball-glow" style="inset:-6px"></div>
+          <div class="ball-3d">
+            <svg class="ball-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="100" r="96" fill="#dde4ed" stroke="#94a3b8" stroke-width="1.5"/>
+              <polygon points="100,28 120,42 114,65 86,65 80,42" fill="#151d30" stroke="#334155" stroke-width="1"/>
+              <polygon points="148,72 168,90 160,114 138,118 128,96" fill="#151d30" stroke="#334155" stroke-width="1"/>
+              <polygon points="52,72 72,96 62,118 40,114 32,90" fill="#151d30" stroke="#334155" stroke-width="1"/>
+              <polygon points="68,148 90,138 110,138 132,148 120,172 80,172" fill="#151d30" stroke="#334155" stroke-width="1"/>
+            </svg>
+          </div>
         </div>
         <div>
-          <button onclick="showHalftimeSummary(document.getElementById('sessionLabel').innerText)" class="btn-emerald" style="padding:10px 20px;display:flex;align-items:center;gap:8px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            Live Summary
-          </button>
+          <h2 id="welcoming-coach" class="display" style="font-size:22px;color:#fff;line-height:1">WELCOME BACK, COACH!</h2>
+          <span id="welcoming-date" class="mono text-[9px] text-slate-500 uppercase tracking-widest mt-0.5 block">MATCHDAY: LOADING...</span>
+        </div>
+      </div>
+      
+      <!-- Compact Horizontal KPIs -->
+      <div style="display:flex;gap:12px;position:relative;z-index:2" class="compact-kpis">
+        <div class="px-4 py-1.5 bg-white/5 rounded-xl border border-white/5 text-center min-w-[75px]">
+          <p class="mono text-[8px] text-slate-500 uppercase">Shots</p>
+          <p id="kpi-shots" class="display text-lg text-slate-200">0</p>
+        </div>
+        <div class="px-4 py-1.5 bg-white/5 rounded-xl border border-white/5 text-center min-w-[75px]">
+          <p class="mono text-[8px] text-slate-500 uppercase">On Target</p>
+          <p id="kpi-target" class="display text-lg text-violet-400">0</p>
+        </div>
+        <div class="px-4 py-1.5 bg-white/5 rounded-xl border border-white/5 text-center min-w-[75px]">
+          <p class="mono text-[8px] text-slate-500 uppercase">Goals</p>
+          <p id="kpi-goals" class="display text-lg text-emerald-400">0</p>
+        </div>
+        <div class="px-4 py-1.5 bg-white/5 rounded-xl border border-white/5 text-center min-w-[75px]">
+          <p class="mono text-[8px] text-slate-500 uppercase">Conv %</p>
+          <p id="kpi-conv" class="display text-lg text-amber-500">0%</p>
         </div>
       </div>
     </div>
 
-    <!-- KPI STATS BOARD -->
-    <div class="kpi-grid">
-      <div class="kpi-card k-total">
-        <p style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;font-family:'JetBrains Mono',monospace">Total Shots</p>
-        <h2 id="kpi-shots" class="display" style="font-size:48px;line-height:1;color:#e2e8f0">0</h2>
-      </div>
-      <div class="kpi-card k-target">
-        <p style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;font-family:'JetBrains Mono',monospace">On Target</p>
-        <h2 id="kpi-target" class="display" style="font-size:48px;line-height:1;color:var(--violet)">0</h2>
-      </div>
-      <div class="kpi-card k-goals">
-        <p style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;font-family:'JetBrains Mono',monospace">Goals</p>
-        <h2 id="kpi-goals" class="display" style="font-size:48px;line-height:1;color:var(--emerald)">0</h2>
-      </div>
-      <div class="kpi-card k-conv">
-        <p style="font-size:9px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:.15em;margin-bottom:8px;font-family:'JetBrains Mono',monospace">Conv %</p>
-        <h2 id="kpi-conv" class="display" style="font-size:48px;line-height:1;color:var(--amber)">0%</h2>
-      </div>
-    </div>
-
-    <!-- MAIN COCKPIT GRID -->
-    <div class="main-grid">
-
-      <!-- LEFT SECTION -->
-      <div style="display:flex;flex-direction:column;gap:20px">
-
-        <!-- AI INTEL PANEL -->
-        <div class="card" style="padding:24px;position:relative;overflow:hidden" id="ai-panel">
-          <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(14,165,233,0.06),transparent 70%);pointer-events:none"></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(139,92,246,0.12));display:flex;align-items:center;justify-content:center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-              </div>
-              <div>
-                <p style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em">AI Tactical Intel</p>
-                <p class="mono" style="font-size:10px;color:#475569">Halftime adjustments analyzed by Claude</p>
-              </div>
-            </div>
-            <span id="ai-status" class="badge-sky">Ready</span>
+    <!-- ======== MAIN 3-COLUMN WORKSPACE GRID ======== -->
+    <div class="main-workspace">
+      
+      <!-- COLUMN 1: TOP ROSTER & ATTACKING LOGS -->
+      <div class="flex flex-col gap-4 flex-[3] min-w-0" style="height: 100%;">
+        
+        <!-- Top Performers -->
+        <div class="card p-4 flex flex-col min-h-0 flex-1">
+          <div class="flex justify-between items-center mb-3 shrink-0">
+            <p class="section-header m-0" style="font-size: 10px;">Top Performers</p>
+            <span class="badge-emerald" style="font-size: 8px;">Auto-Ranked</span>
           </div>
-          <div id="ai-output" style="min-height:60px;color:#94a3b8;font-size:13px;line-height:1.7">
-            <p style="color:#334155;font-style:italic">Click "AI Intel" in the top bar to synthesize real-time tactical adjustments based on logged shot distributions.</p>
+          <div id="top-players" class="grid grid-cols-1 gap-2 overflow-y-auto pr-1" style="flex: 1;">
+            <div style="color:#334155;font-size:11px;text-align:center;padding:20px">No shot statistics recorded yet.</div>
           </div>
         </div>
-
-        <!-- TOP PLAYERS PANEL -->
-        <div class="card" style="padding:24px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <p class="section-header" style="margin-bottom:0">Top Performers</p>
-            <span class="badge-emerald">Auto-Ranked</span>
+        
+        <!-- Attacking Logs table -->
+        <div class="card flex flex-col min-h-0 flex-[1.2] overflow-hidden">
+          <div class="px-5 py-3 border-b border-white/5 flex justify-between items-center shrink-0">
+            <p class="section-header m-0" style="font-size: 10px; margin-bottom: 0;">Attacking Logs</p>
+            <span id="filter-status" class="badge-sky" style="font-size: 8px;">Showing: My Team</span>
           </div>
-          <div id="top-players" class="top-players-grid">
-            <div style="color:#334155;font-size:12px;grid-column:1/-1;text-align:center;padding:20px">No shot statistics recorded yet.</div>
-          </div>
-        </div>
-
-        <!-- TRIPLE DYNAMIC ANALYTICS -->
-        <div class="charts-grid">
-          <div class="card" style="padding:20px">
-            <p class="section-header">Attacking Origins</p>
-            <div class="chart-wrap"><canvas id="chart-type"></canvas></div>
-          </div>
-          <div class="card" style="padding:20px">
-            <p class="section-header">Outcome Distribution</p>
-            <div class="chart-wrap"><canvas id="chart-outcome"></canvas></div>
-          </div>
-          <div class="card" style="padding:20px">
-            <p class="section-header">Positional Shot Volume</p>
-            <div class="chart-wrap"><canvas id="chart-loc"></canvas></div>
-          </div>
-        </div>
-
-        <!-- MATCH EVENT LOG TABLE -->
-        <div class="card" style="overflow:hidden">
-          <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:space-between">
-            <p class="section-header" style="margin-bottom:0">Attacking Logs</p>
-            <span id="filter-status" class="badge-sky">Showing: My Team</span>
-          </div>
-          <div style="max-height:280px;overflow-y:auto">
+          <div class="overflow-y-auto flex-1" id="table-body-scroll">
             <table style="width:100%;border-collapse:collapse">
-              <tbody id="table-body" style="font-family:'JetBrains Mono',monospace;font-size:11px"></tbody>
+              <tbody id="table-body" style="font-family:'JetBrains Mono',monospace;font-size:10px"></tbody>
             </table>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT COLUMN -->
-      <div style="display:flex;flex-direction:column;gap:20px">
-
-        <!-- SPATIAL DISTRIBUTIONS FIELD -->
-        <div class="card" style="padding:20px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <p class="section-header" style="margin-bottom:0">Spatial Shot Map</p>
+      <!-- COLUMN 2: SPATIAL SHOT MAP & MISTAKES -->
+      <div class="flex flex-col gap-4 flex-[3.5] min-w-0" style="height: 100%;">
+        
+        <!-- Spatial Shot Map -->
+        <div class="card p-4 flex flex-col items-center min-h-0 flex-[1.5]">
+          <div class="flex justify-between items-center w-full mb-3 shrink-0">
+            <p class="section-header m-0" style="font-size: 10px;">Spatial Shot Map</p>
             <div style="display:flex;gap:8px">
-              <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><span style="width:8px;height:8px;border-radius:50%;background:var(--sky);display:inline-block"></span>Us</span>
-              <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b"><span style="width:8px;height:8px;border-radius:50%;background:var(--rose);display:inline-block"></span>Opp</span>
+              <span style="display:flex;align-items:center;gap:4px;font-size:9px;color:#64748b"><span style="width:6px;height:6px;border-radius:50%;background:var(--sky);display:inline-block"></span>Us</span>
+              <span style="display:flex;align-items:center;gap:4px;font-size:9px;color:#64748b"><span style="width:6px;height:6px;border-radius:50%;background:var(--rose);display:inline-block"></span>Opp</span>
             </div>
           </div>
-          <div class="pitch" id="heatmap-pitch">
-            <div class="pitch-line" style="width:100%;top:50%;border-color:rgba(255,255,255,0.12)"></div>
-            <div class="pitch-line" style="width:60%;height:16%;top:0;left:20%;border-color:rgba(255,255,255,0.12)"></div>
-            <div class="pitch-line" style="width:60%;height:16%;bottom:0;left:20%;border-color:rgba(255,255,255,0.12)"></div>
-            <div class="pitch-line" style="width:80px;height:80px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);border-color:rgba(255,255,255,0.12)"></div>
-            <div style="position:absolute;top:50%;left:50%;width:5px;height:5px;background:rgba(255,255,255,0.15);border-radius:50%;transform:translate(-50%,-50%)"></div>
-            <!-- Goals boxes outline -->
-            <div style="position:absolute;top:0;left:35%;width:30%;height:6%;border:1px solid rgba(255,255,255,0.12);border-top:none"></div>
-            <div style="position:absolute;bottom:0;left:35%;width:30%;height:6%;border:1px solid rgba(255,255,255,0.12);border-bottom:none"></div>
+          <div class="flex-1 flex items-center justify-center min-h-0 w-full">
+            <div class="pitch" id="heatmap-pitch" style="max-height: 100%; aspect-ratio: 68/105; width: auto; max-width: 250px;">
+              <div class="pitch-line" style="width:100%;top:50%;border-color:rgba(255,255,255,0.12)"></div>
+              <div class="pitch-line" style="width:60%;height:16%;top:0;left:20%;border-color:rgba(255,255,255,0.12)"></div>
+              <div class="pitch-line" style="width:60%;height:16%;bottom:0;left:20%;border-color:rgba(255,255,255,0.12)"></div>
+              <div class="pitch-line" style="width:80px;height:80px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);border-color:rgba(255,255,255,0.12)"></div>
+              <div style="position:absolute;top:50%;left:50%;width:5px;height:5px;background:rgba(255,255,255,0.15);border-radius:50%;transform:translate(-50%,-50%)"></div>
+              <div style="position:absolute;top:0;left:35%;width:30%;height:6%;border:1px solid rgba(255,255,255,0.12);border-top:none"></div>
+              <div style="position:absolute;bottom:0;left:35%;width:30%;height:6%;border:1px solid rgba(255,255,255,0.12);border-bottom:none"></div>
+            </div>
           </div>
         </div>
 
-        <!-- MISTAKE TRACKER PANEL -->
-        <div class="card" style="padding:20px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-            <p class="section-header" style="margin-bottom:0">Mistake Tracker</p>
-            <span class="badge-rose" id="mistake-count">0 errors</span>
+        <!-- Mistake Tracker -->
+        <div class="card p-4 flex flex-col min-h-0 flex-1">
+          <div class="flex justify-between items-center mb-3 shrink-0">
+            <p class="section-header m-0" style="font-size: 10px;">Mistake Tracker</p>
+            <span class="badge-rose" id="mistake-count" style="font-size: 8px;">0 errors</span>
           </div>
-          <div id="mistake-list" style="display:flex;flex-direction:column;gap:8px;max-height:170px;overflow-y:auto">
+          <div id="mistake-list" class="overflow-y-auto pr-1 flex-1 flex flex-col gap-2">
             <p style="font-size:11px;color:#334155;text-align:center;padding:16px">No turnovers logged yet.</p>
           </div>
         </div>
+      </div>
 
-        <!-- SAVED SESSIONS PANEL -->
-        <div class="card" style="padding:20px">
-          <p class="section-header">Archives</p>
-          <div id="archives-container" style="display:flex;flex-direction:column;gap:8px"></div>
-          <div id="no-archives" style="font-size:11px;color:#334155;text-align:center;padding:16px">No saved sessions</div>
+      <!-- COLUMN 3: AI INTEL, ANALYTICS TABS -->
+      <div class="flex flex-col gap-4 flex-[3.5] min-w-0" style="height: 100%;">
+        
+        <!-- AI Tactical Intel -->
+        <div class="card p-4 flex flex-col min-h-0 flex-[1.2] relative overflow-hidden" id="ai-panel">
+          <div style="position:absolute;top:-60px;right:-60px;width:150px;height:150px;background:radial-gradient(circle,rgba(14,165,233,0.06),transparent 70%);pointer-events:none"></div>
+          <div class="flex justify-between items-center mb-3 shrink-0">
+            <div class="flex items-center gap-2">
+              <div style="width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(139,92,246,0.12));display:flex;align-items:center;justify-content:center">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              </div>
+              <div>
+                <p style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em" class="m-0">AI Tactical Intel</p>
+              </div>
+            </div>
+            <span id="ai-status" class="badge-sky" style="font-size: 8px;">Ready</span>
+          </div>
+          <div id="ai-output" class="overflow-y-auto flex-1 pr-1 font-mono" style="font-size:11px;line-height:1.6;color:#94a3b8">
+            <p style="color:#334155;font-style:italic">Click "AI Intel" in the top bar to synthesize real-time tactical adjustments.</p>
+          </div>
+        </div>
+
+        <!-- Charts and Archives Tab Workspace -->
+        <div class="card p-4 flex flex-col min-h-0 flex-1">
+          <div class="flex gap-2 mb-3 shrink-0 justify-between items-center">
+            <div class="toggle-wrap">
+              <button onclick="switchWorkspaceTab('charts')" id="w-btn-charts" class="filter-btn active" style="padding: 4px 12px; font-size: 10px;">Charts</button>
+              <button onclick="switchWorkspaceTab('archives')" id="w-btn-archives" class="filter-btn" style="padding: 4px 12px; font-size: 10px;">Archives</button>
+            </div>
+            <span class="badge-violet" style="font-size: 8px;">Analytics</span>
+          </div>
+          
+          <!-- Charts Tab -->
+          <div id="w-tab-charts" class="flex-1 min-h-0 flex gap-2 w-full overflow-hidden">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; height: 100%;">
+              <div class="flex flex-col min-h-0">
+                <p class="mono text-[8px] text-slate-500 uppercase tracking-widest mb-1 text-center">Origins</p>
+                <div class="flex-1 min-h-0 relative"><canvas id="chart-type"></canvas></div>
+              </div>
+              <div class="flex flex-col min-h-0">
+                <p class="mono text-[8px] text-slate-500 uppercase tracking-widest mb-1 text-center">Outcomes</p>
+                <div class="flex-1 min-h-0 relative"><canvas id="chart-outcome"></canvas></div>
+              </div>
+              <div class="flex flex-col min-h-0">
+                <p class="mono text-[8px] text-slate-500 uppercase tracking-widest mb-1 text-center">Volume</p>
+                <div class="flex-1 min-h-0 relative"><canvas id="chart-loc"></canvas></div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Archives Tab -->
+          <div id="w-tab-archives" class="flex-1 overflow-y-auto pr-1 flex flex-col gap-2" style="display: none;">
+            <div id="archives-container" class="flex flex-col gap-2"></div>
+            <div id="no-archives" class="text-slate-600 text-[11px] text-center py-6">No saved sessions</div>
+          </div>
         </div>
       </div>
+      
     </div>
   </div>
 
@@ -772,116 +849,143 @@ async function syncToCloud() {
 
 // -- FIREBASE STATE INITIALIZATION --------------------------------------------
 if(firebaseReady){
-  firebase.initializeApp(firebaseConfig);
-  auth=firebase.auth();
-  db=firebase.firestore();
-  
-  // Enable multi-tab offline persistence to prevent locking delays across concurrent browser sessions
-  db.enablePersistence({synchronizeTabs: true}).catch(err => {
-    console.warn("Firestore offline persistence not enabled:", err.code);
-  });
-
-  // Handle and catch Google Redirect Auth errors on redirect back
-  auth.getRedirectResult().then(result => {
-    if (result && result.user) {
-      showToast(`Google Sign-In successful!`, 'ok');
-    }
-  }).catch(err => {
-    console.error("Google Redirect Auth Error:", err);
-    showToast(`Google Sign-In failed: ${err.message}`, 'warn');
-  });
-
-  auth.onAuthStateChanged(user=>{
-    if(user){
-      currentUser=user.uid;
-      currentEmail=user.email||'';
-      
-      // Load user's data package from Firestore
-      db.collection('users').doc(currentUser).get().then(doc => {
-        let hasCloudData = false;
-        if (doc.exists) {
-          const data = doc.data();
-          if (data) {
-            hasCloudData = true;
-            if (data.teamName !== undefined) teamName = data.teamName;
-            if (data.players !== undefined) players = data.players;
-            if (data.savedSessions !== undefined) savedSessions = data.savedSessions;
-            if (data.allShots !== undefined) allShots = data.allShots;
-          }
-        }
-        
-        // Fallback & Migration: If Firestore doc doesn't exist, migrate from local storage
-        if (!hasCloudData) {
-          teamName = localStorage.getItem(teamKey()) || user.displayName || 'My Team';
-          savedSessions = JSON.parse(localStorage.getItem(uKey()) || '{}');
-          players = JSON.parse(localStorage.getItem(pKey()) || '[]');
-          allShots = JSON.parse(localStorage.getItem('cm_active_'+currentUser) || '[]');
-          
-          // Push local telemetry up to the cloud doc immediately
-          syncToCloud();
-        } else {
-          // Mirror state to local cache for offline safety
-          localStorage.setItem(teamKey(), teamName);
-          localStorage.setItem(uKey(), JSON.stringify(savedSessions));
-          localStorage.setItem(pKey(), JSON.stringify(players));
-          localStorage.setItem('cm_active_'+currentUser, JSON.stringify(allShots));
-        }
-        
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('lu').value=currentEmail;
-        applyTeamName(); 
-        
-        // Populate Welcoming Banner HUD
-        const welcomingBanner = document.getElementById('welcoming-banner');
-        if (welcomingBanner) {
-          welcomingBanner.style.display = 'block';
-          const coachName = user.displayName || user.email.split('@')[0];
-          document.getElementById('welcoming-coach').innerText = `WELCOME BACK, COACH ${coachName.toUpperCase()}!`;
-          const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-          document.getElementById('welcoming-date').innerText = "MATCHDAY: " + new Date().toLocaleDateString('en-US', options).toUpperCase();
-        }
-
-        updateUI();
-        showToast(`Signed in as ${user.email}`, 'info');
-      }).catch(err => {
-        console.error("Firestore fetch error, falling back to local cache:", err);
-        // Resilient Offline Cache Fallback
-        teamName = localStorage.getItem(teamKey()) || user.displayName || 'My Team';
-        savedSessions = JSON.parse(localStorage.getItem(uKey()) || '{}');
-        players = JSON.parse(localStorage.getItem(pKey()) || '[]');
-        allShots = JSON.parse(localStorage.getItem('cm_active_'+currentUser) || '[]');
-        
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('lu').value=currentEmail;
-        applyTeamName(); 
-        
-        // Populate Welcoming Banner HUD
-        const welcomingBanner = document.getElementById('welcoming-banner');
-        if (welcomingBanner) {
-          welcomingBanner.style.display = 'block';
-          const coachName = user.displayName || user.email.split('@')[0];
-          document.getElementById('welcoming-coach').innerText = `WELCOME BACK, COACH ${coachName.toUpperCase()}!`;
-          const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-          document.getElementById('welcoming-date').innerText = "MATCHDAY: " + new Date().toLocaleDateString('en-US', options).toUpperCase();
-        }
-
-        updateUI();
-        showToast(`Signed in (Offline Cache)`, 'info');
+  try {
+    firebase.initializeApp(firebaseConfig);
+    auth=firebase.auth();
+    db=firebase.firestore();
+    
+    // Enable multi-tab offline persistence defensively to prevent concurrency locking delays
+    try {
+      db.enablePersistence({synchronizeTabs: true}).catch(err => {
+        console.warn("Firestore offline persistence not enabled:", err.code);
       });
-      return;
+    } catch (e) {
+      console.warn("Firestore persistence failed synchronously:", e);
     }
-    currentUser=null; currentEmail=''; teamName='My Team'; allShots=[]; savedSessions={}; players=[]; playerFilter='ALL'; filterMode='myteam';
-    if(tChart) { tChart.destroy(); tChart=null; }
-    if(lChart) { lChart.destroy(); lChart=null; }
-    if(oChart) { oChart.destroy(); oChart=null; }
-    const welcomingBanner = document.getElementById('welcoming-banner');
-    if (welcomingBanner) welcomingBanner.style.display = 'none';
 
-    document.getElementById('auth-screen').classList.remove('hidden');
-    document.getElementById('auth-help').innerText='Log in using Email & Password. Roster and metrics sync automatically across all devices.';
-    applyTeamName(); 
-    updateUI();
-  });
+    // Handle Google Redirect Auth defensively on page load
+    try {
+      auth.getRedirectResult().then(result => {
+        if (result && result.user) {
+          showToast(`Google Sign-In successful!`, 'ok');
+        }
+      }).catch(err => {
+        console.error("Google Redirect Auth Error:", err);
+        showToast(`Google Sign-In failed: ${err.message}`, 'warn');
+      });
+    } catch (e) {
+      console.error("Google Redirect handler failed synchronously:", e);
+    }
+
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        currentUser=user.uid;
+        currentEmail=user.email||'';
+        
+        // Load user's data package from Firestore
+        db.collection('users').doc(currentUser).get().then(doc => {
+          let hasCloudData = false;
+          if (doc.exists) {
+            const data = doc.data();
+            if (data) {
+              hasCloudData = true;
+              if (data.teamName !== undefined) teamName = data.teamName;
+              if (data.players !== undefined) players = data.players;
+              if (data.savedSessions !== undefined) savedSessions = data.savedSessions;
+              if (data.allShots !== undefined) allShots = data.allShots;
+            }
+          }
+          
+          // Fallback & Migration: If Firestore doc doesn't exist, migrate from local storage safely
+          if (!hasCloudData) {
+            teamName = localStorage.getItem(teamKey()) || user.displayName || 'My Team';
+            try {
+              savedSessions = JSON.parse(localStorage.getItem(uKey()) || '{}');
+            } catch(e) { savedSessions = {}; }
+            try {
+              players = JSON.parse(localStorage.getItem(pKey()) || '[]');
+            } catch(e) { players = []; }
+            try {
+              allShots = JSON.parse(localStorage.getItem('cm_active_'+currentUser) || '[]');
+            } catch(e) { allShots = []; }
+            
+            // Push local telemetry up to the cloud doc immediately
+            syncToCloud();
+          } else {
+            // Mirror state to local cache for offline safety safely
+            try {
+              localStorage.setItem(teamKey(), teamName);
+              localStorage.setItem(uKey(), JSON.stringify(savedSessions));
+              localStorage.setItem(pKey(), JSON.stringify(players));
+              localStorage.setItem('cm_active_'+currentUser, JSON.stringify(allShots));
+            } catch(e) { console.warn("Failed to update localStorage cache:", e); }
+          }
+          
+          document.getElementById('auth-screen').classList.add('hidden');
+          document.getElementById('lu').value=currentEmail;
+          applyTeamName(); 
+          
+          // Populate Welcoming Banner HUD
+          const welcomingBanner = document.getElementById('welcoming-banner');
+          if (welcomingBanner) {
+            welcomingBanner.style.display = 'block';
+            const coachName = user.displayName || user.email.split('@')[0];
+            document.getElementById('welcoming-coach').innerText = `WELCOME BACK, COACH ${coachName.toUpperCase()}!`;
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('welcoming-date').innerText = "MATCHDAY: " + new Date().toLocaleDateString('en-US', options).toUpperCase();
+          }
+
+          updateUI();
+          showToast(`Signed in as ${user.email}`, 'info');
+        }).catch(err => {
+          console.error("Firestore fetch error, falling back to local cache:", err);
+          // Resilient Offline Cache Fallback
+          teamName = localStorage.getItem(teamKey()) || user.displayName || 'My Team';
+          try {
+            savedSessions = JSON.parse(localStorage.getItem(uKey()) || '{}');
+          } catch(e) { savedSessions = {}; }
+          try {
+            players = JSON.parse(localStorage.getItem(pKey()) || '[]');
+          } catch(e) { players = []; }
+          try {
+            allShots = JSON.parse(localStorage.getItem('cm_active_'+currentUser) || '[]');
+          } catch(e) { allShots = []; }
+          
+          document.getElementById('auth-screen').classList.add('hidden');
+          document.getElementById('lu').value=currentEmail;
+          applyTeamName(); 
+          
+          // Populate Welcoming Banner HUD
+          const welcomingBanner = document.getElementById('welcoming-banner');
+          if (welcomingBanner) {
+            welcomingBanner.style.display = 'block';
+            const coachName = user.displayName || user.email.split('@')[0];
+            document.getElementById('welcoming-coach').innerText = `WELCOME BACK, COACH ${coachName.toUpperCase()}!`;
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('welcoming-date').innerText = "MATCHDAY: " + new Date().toLocaleDateString('en-US', options).toUpperCase();
+          }
+
+          updateUI();
+          showToast(`Signed in (Offline Cache)`, 'info');
+        });
+        return;
+      }
+      currentUser=null; currentEmail=''; teamName='My Team'; allShots=[]; savedSessions={}; players=[]; playerFilter='ALL'; filterMode='myteam';
+      if(tChart) { tChart.destroy(); tChart=null; }
+      if(lChart) { lChart.destroy(); lChart=null; }
+      if(oChart) { oChart.destroy(); oChart=null; }
+      const welcomingBanner = document.getElementById('welcoming-banner');
+      if (welcomingBanner) welcomingBanner.style.display = 'none';
+
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('auth-help').innerText='Log in using Email & Password. Roster and metrics sync automatically across all devices.';
+      applyTeamName(); 
+      updateUI();
+    });
+  } catch (err) {
+    console.error("Firebase auth/db bootstrapping failed:", err);
+  }
+}
 } else {
   document.addEventListener('DOMContentLoaded',()=>{
     const help=document.getElementById('auth-help');
@@ -906,6 +1010,15 @@ function switchTab(t){
   ['lerr','suerr','sperr'].forEach(id=>document.getElementById(id).classList.remove('show'));
   const authScreen=document.getElementById('auth-screen');
   if(authScreen) authScreen.scrollTo({top:0,behavior:'smooth'});
+}
+
+function switchWorkspaceTab(tab) {
+  ['charts', 'archives'].forEach(t => {
+    const el = document.getElementById('w-tab-' + t);
+    if(el) el.style.display = (t === tab) ? (t === 'charts' ? 'flex' : 'block') : 'none';
+    const btn = document.getElementById('w-btn-' + t);
+    if(btn) btn.classList.toggle('active', t === tab);
+  });
 }
 
 // -- USER ACCESS CONTROL ------------------------------------------------------
