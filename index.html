@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clutch Metrics | Halftime Tactical Hub</title>
 <meta name="description" content="Premium halftime coaching dashboard for shot telemetry, spatial analysis, and AI tactical adjustments.">
+<!-- ═══ PWA META TAGS ═══ -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#D4A24C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Clutch Metrics">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<!-- ═══ END PWA META TAGS ═══ -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js"></script>
@@ -1599,5 +1608,16 @@ randomizeCoachCorner();
 switchTab('login');
 updateUI();
 </script>
+<!-- ═══ SERVICE WORKER REGISTRATION ═══ -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('[PWA] Service worker registered:', reg.scope))
+        .catch(err => console.warn('[PWA] Service worker registration failed:', err));
+    });
+  }
+</script>
+<!-- ═══ END SERVICE WORKER REGISTRATION ═══ -->
 </body>
 </html>
