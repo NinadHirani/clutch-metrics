@@ -32,17 +32,17 @@
   --shadow-lg:0 8px 30px rgba(0,0,0,0.07),0 2px 6px rgba(0,0,0,0.03);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;min-height:100vh;overflow-x:hidden;line-height:1.6;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;overflow-x:hidden;width:100%;max-width:100vw}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;min-height:100vh;overflow-x:hidden;width:100%;max-width:100vw;position:relative;line-height:1.6;-webkit-font-smoothing:antialiased}
 body::before{content:'';position:fixed;inset:0;background:
   radial-gradient(ellipse 80% 50% at 20% 0%,rgba(212,162,76,0.04) 0%,transparent 60%),
   radial-gradient(ellipse 60% 40% at 80% 100%,rgba(212,162,76,0.03) 0%,transparent 60%);
 pointer-events:none;z-index:0}
 
-.z1{position:relative;z-index:1}
+.z1{position:relative;z-index:1;width:100%;max-width:100vw;overflow-x:hidden}
 
 /* CARD SYSTEM */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;transition:border-color 0.25s,box-shadow 0.25s,transform 0.25s;box-shadow:var(--shadow-sm)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;transition:border-color 0.25s,box-shadow 0.25s,transform 0.25s;box-shadow:var(--shadow-sm);min-width:0;max-width:100%;word-break:break-word}
 .card:hover{border-color:var(--border-hover);box-shadow:var(--shadow-md);transform:translateY(-1px)}
 
 /* TYPOGRAPHY */
@@ -51,11 +51,12 @@ pointer-events:none;z-index:0}
 .section-header{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:12px}
 
 /* AUTH SCREEN */
-#auth-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:24px}
+#auth-screen{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:24px 16px}
+#auth-screen > div{margin:auto 0;width:100%;max-width:1100px}
 #auth-screen.hidden{display:none}
 
 /* FORM INPUTS */
-.inp{width:100%;background:var(--surface);border:1.5px solid var(--border);padding:12px 16px;border-radius:12px;outline:none;color:var(--text);transition:all 0.25s;font-family:'Inter',sans-serif;font-size:14px}
+.inp{width:100%;background:var(--surface);border:1.5px solid var(--border);padding:12px 16px;border-radius:12px;outline:none;color:var(--text);transition:all 0.25s;font-family:'Inter',sans-serif;font-size:14px;box-sizing:border-box}
 .inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(212,162,76,0.12)}
 .inp::placeholder{color:var(--text-muted)}
 .inp option{background:var(--surface);color:var(--text)}
@@ -71,27 +72,27 @@ pointer-events:none;z-index:0}
 /* TAB TOGGLES */
 .auth-tab{transition:all .25s;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--text-muted)}
 .auth-tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(212,162,76,0.2)}
-.filter-btn{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--text-muted);transition:all .2s}
+.filter-btn{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--text-muted);transition:all .2s;white-space:nowrap}
 .filter-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(212,162,76,0.2)}
-.pf-btn{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);transition:all .2s}
+.pf-btn{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);transition:all .2s;white-space:nowrap}
 .pf-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 8px rgba(212,162,76,0.2)}
 
 /* PITCH */
-.pitch{background:linear-gradient(180deg,#2d6a3f 0%,#347a4a 30%,#3d8f56 50%,#347a4a 70%,#2d6a3f 100%);position:relative;aspect-ratio:68/105;width:100%;max-width:280px;margin:0 auto;border:2px solid rgba(45,138,86,0.5);border-radius:8px;overflow:hidden;box-shadow:var(--shadow-lg)}
+.pitch{background:linear-gradient(180deg,#2d6a3f 0%,#347a4a 30%,#3d8f56 50%,#347a4a 70%,#2d6a3f 100%);position:relative;aspect-ratio:68/105;width:100%;max-width:280px;margin:0 auto;border:2px solid rgba(45,138,86,0.5);border-radius:8px;overflow:hidden;box-shadow:var(--shadow-lg);touch-action:manipulation}
 .pitch::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(180deg,rgba(0,0,0,0.04) 0px,rgba(0,0,0,0.04) 12px,transparent 12px,transparent 24px)}
 .pitch-line{border:1px solid rgba(255,255,255,0.25);position:absolute;pointer-events:none}
 .shot-dot{position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);z-index:20;transition:transform .15s,box-shadow 0.15s;cursor:pointer}
 .shot-dot:hover{transform:translate(-50%,-50%) scale(1.6);z-index:30}
 
 /* MODALS */
-.modal{display:none;position:fixed;inset:0;background:rgba(43,43,43,0.4);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px}
+.modal{display:none;position:fixed;inset:0;background:rgba(43,43,43,0.4);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .modal.active{display:flex}
 
 /* BADGES */
-.badge-accent{background:var(--accent-bg);color:var(--accent);border:1px solid rgba(212,162,76,0.2);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em}
-.badge-success{background:rgba(45,138,86,0.08);color:var(--success);border:1px solid rgba(45,138,86,0.2);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em}
-.badge-danger{background:rgba(192,57,43,0.08);color:var(--danger);border:1px solid rgba(192,57,43,0.2);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em}
-.badge-info{background:rgba(74,127,181,0.08);color:var(--info);border:1px solid rgba(74,127,181,0.2);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.badge-accent{background:var(--accent-bg);color:var(--accent);border:1px solid rgba(212,162,76,0.2);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.badge-success{background:rgba(45,138,86,0.08);color:var(--success);border:1px solid rgba(45,138,86,0.2);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.badge-danger{background:rgba(192,57,43,0.08);color:var(--danger);border:1px solid rgba(192,57,43,0.2);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.badge-info{background:rgba(74,127,181,0.08);color:var(--info);border:1px solid rgba(74,127,181,0.2);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
 
 /* AI INSIGHT */
 .ai-insight{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;overflow:hidden;transition:all .25s}
@@ -103,13 +104,18 @@ pointer-events:none;z-index:0}
 .player-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
 
 /* MISTAKE TRACKER */
-.mistake-flag{background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.2);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--danger)}
+.mistake-flag{background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.2);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--danger);white-space:nowrap}
 
 /* TOGGLE WRAP */
 .toggle-wrap{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:3px;gap:2px}
 
-/* TOP BAR */
-.top-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm)}
+.top-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm);width:100%;max-width:100vw;box-sizing:border-box}
+.top-bar-left{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.top-bar-right{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+@media(max-width:1150px) and (min-width:769px){
+  .top-bar-right{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .top-bar-right::-webkit-scrollbar{display:none}
+}
 
 /* TOASTS */
 #toast-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
@@ -132,28 +138,112 @@ pointer-events:none;z-index:0}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .fade-in{animation:fadeIn .4s ease-out both}
 
-/* RESPONSIVE */
-.app-pad{padding:20px 24px;max-width:1440px;margin:0 auto}
-.main-workspace{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:16px}
-#top-players,#table-body-scroll,#mistake-list,#ai-output,#w-tab-archives{max-height:340px;overflow-y:auto}
+/* RESPONSIVE & LAYOUT SYSTEM */
+.app-pad{padding:20px 24px;max-width:1440px;margin:0 auto;width:100%;box-sizing:border-box}
+.main-workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);gap:16px;width:100%;min-width:0}
+.main-workspace > div, .col-center{min-width:0;max-width:100%}
+#top-players,#mistake-list,#ai-output,#w-tab-archives{max-height:340px;overflow-y:auto}
+
+/* ATTACKING LOGS HORIZONTAL SCROLL PROTECTION */
+#table-body-scroll{
+  max-height:340px;
+  overflow-y:auto;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  width:100%;
+  max-width:100%;
+}
+#table-body-scroll table{
+  min-width:540px;
+  width:100%;
+  border-collapse:collapse;
+}
+
+#w-tab-charts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+.coaches-grid{margin-top:20px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;width:100%}
 
 @media(max-width:1200px){
-  .main-workspace{grid-template-columns:1fr 1fr}
+  .main-workspace{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   .main-workspace > .col-center{grid-column:1 / -1}
 }
+
 @media(max-width:768px){
-  .app-pad{padding:12px}
-  .main-workspace{grid-template-columns:1fr}
-  .top-bar{padding:12px 16px;flex-direction:column;align-items:stretch;gap:10px}
-  .top-bar > div:last-child{justify-content:center;flex-wrap:wrap}
-  .welcome-banner-inner{flex-direction:column !important;gap:16px !important}
-  .compact-kpis{justify-content:center;flex-wrap:wrap}
-  #pf-bar{padding:10px 16px}
-  .modal{padding:8px}
+  .app-pad{padding:12px 10px}
+  .main-workspace{grid-template-columns:minmax(0,1fr);gap:14px}
+  
+  /* Compact & Non-obstructive Top Bar */
+  .top-bar{padding:10px 14px;flex-direction:column;align-items:stretch;gap:8px}
+  .top-bar-left{display:flex;align-items:center;justify-content:space-between;width:100%}
+  .top-bar-right{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    overflow-x:auto;
+    width:100%;
+    max-width:100%;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding-bottom:3px;
+  }
+  .top-bar-right::-webkit-scrollbar{display:none}
+  .top-bar-right > *{flex-shrink:0;white-space:nowrap}
+
+  /* Welcome Banner & KPI Grid */
+  #welcoming-banner{padding:14px 14px !important}
+  .welcome-banner-inner{flex-direction:column !important;align-items:stretch !important;gap:12px !important}
+  .compact-kpis{
+    display:grid !important;
+    grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+    gap:6px !important;
+    width:100% !important;
+  }
+  .compact-kpis > div{
+    min-width:0 !important;
+    padding:6px 2px !important;
+    border-radius:10px !important;
+    text-align:center !important;
+  }
+  .compact-kpis > div p:first-child{
+    font-size:9px !important;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .compact-kpis > div p:last-child{
+    font-size:15px !important;
+  }
+
+  /* Stacked Charts for Legibility */
+  #w-tab-charts{grid-template-columns:minmax(0,1fr) !important;gap:16px !important}
+  .coaches-grid{grid-template-columns:minmax(0,1fr) !important;gap:12px !important}
+  #pf-bar{padding:10px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  
+  /* Mobile Modals */
+  .modal{padding:12px 10px;align-items:flex-start}
+  .modal .card{
+    margin:auto 0 !important;
+    padding:22px 16px !important;
+    width:100% !important;
+    max-width:100% !important;
+    border-radius:18px !important;
+  }
   #top-players,#table-body-scroll,#mistake-list,#ai-output,#w-tab-archives{max-height:260px}
+
+  /* Responsive Centered Footer */
+  footer{padding:24px 16px !important}
+  footer > div{flex-direction:column !important;align-items:center !important;text-align:center !important;gap:14px !important}
+  .stamp-seal-btn{
+    max-width:100% !important;
+    white-space:normal !important;
+    padding:8px 14px !important;
+    font-size:11px !important;
+    text-align:center !important;
+    justify-content:center !important;
+  }
 }
-@media(max-width:480px){
-  .compact-kpis > div{min-width:60px !important;padding:6px 10px !important}
+
+@media(max-width:420px){
+  .compact-kpis{grid-template-columns:repeat(3,minmax(0,1fr)) repeat(2,minmax(0,1fr)) !important}
 }
 
 /* LOADING SCREEN */
@@ -162,11 +252,62 @@ pointer-events:none;z-index:0}
 .loader-spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes progressSweep{0%{left:-40%}100%{left:100%}}
 
-footer{border-top:1px solid var(--border)}
+footer{border-top:1px solid var(--border);width:100%}
 
 /* COACH'S CORNER */
 .insight-card{background:linear-gradient(135deg,rgba(212,162,76,0.04),rgba(212,162,76,0.01));border:1px solid rgba(212,162,76,0.15);border-radius:16px;padding:20px;transition:all .25s}
 .insight-card:hover{border-color:var(--border-hover);box-shadow:var(--shadow-sm)}
+
+/* CREATOR STAMP & PROVENANCE STYLES */
+.stamp-seal-btn{transition:all 0.25s cubic-bezier(0.16,1,0.3,1);user-select:none}
+.stamp-seal-btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 6px 20px rgba(212,162,76,0.35);border-color:#b88628}
+.stamp-seal-btn:active{transform:translateY(0) scale(0.98)}
+
+.interactive-wax-seal{
+  width:115px;height:115px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #F7E4B2 0%, #D4A24C 45%, #8A6016 100%);
+  border:4px double #FFF5DB;
+  box-shadow:0 8px 24px rgba(138,96,22,0.35), inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -4px 8px rgba(0,0,0,0.35);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:#3A2402;text-shadow:0 1px 0 rgba(255,255,255,0.4);
+  margin:0 auto 16px;cursor:pointer;position:relative;user-select:none;
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+.interactive-wax-seal:hover{transform:scale(1.05);box-shadow:0 12px 32px rgba(138,96,22,0.45)}
+.seal-stamped{animation:stampSlam 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)}
+@keyframes stampSlam{
+  0%{transform:scale(2.2) rotate(-15deg);opacity:0}
+  60%{transform:scale(0.9) rotate(3deg);opacity:1}
+  100%{transform:scale(1) rotate(0deg);opacity:1}
+}
+@keyframes pingPulse{
+  0%{transform:translate(-50%,-50%) scale(0.5);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(2.4);opacity:0}
+}
+
+/* SHOT DOT POPOVER */
+#dot-popover{
+  display:none;position:absolute;z-index:45;width:200px;max-width:85vw;
+  background:var(--surface);border:1.5px solid var(--border);border-radius:14px;
+  padding:12px;box-shadow:var(--shadow-lg);pointer-events:auto;
+  transform:translate(-50%,-110%);animation:fadeIn 0.15s ease-out;
+}
+#dot-popover::after{
+  content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:10px;height:10px;background:var(--surface);border-right:1.5px solid var(--border);border-bottom:1.5px solid var(--border);
+}
+
+.xg-badge{
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;
+  background:rgba(74,127,181,0.08);color:var(--info);border:1px solid rgba(74,127,181,0.2);white-space:nowrap;
+}
+
+@media print{
+  body{background:#fff !important;color:#000 !important}
+  .top-bar,#auth-screen,#loading-screen,.modal,#toast-wrap,button{display:none !important}
+  .card{border:1px solid #ccc !important;box-shadow:none !important}
+  .main-workspace{display:block !important}
+}
 </style>
 </head>
 <body>
@@ -275,6 +416,9 @@ footer{border-top:1px solid var(--border)}
             <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
             Continue with Google
           </button>
+          <button onclick="launchDemoMode()" type="button" style="width:100%;margin-top:10px;background:rgba(212,162,76,0.08);border:1.5px dashed var(--accent);color:var(--accent);padding:11px 20px;border-radius:12px;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s" onmouseover="this.style.background='rgba(212,162,76,0.15)'" onmouseout="this.style.background='rgba(212,162,76,0.08)'">
+            <span>⚡ Explore Live Demo Match (Guest Mode)</span>
+          </button>
           <p style="font-size:13px;color:var(--text-secondary);text-align:center;margin-top:20px">New here? <button onclick="switchTab('signup')" style="color:var(--accent);font-weight:700;background:none;border:none;cursor:pointer">Create account</button></p>
         </div>
 
@@ -309,33 +453,44 @@ footer{border-top:1px solid var(--border)}
 <!-- ======== APP CONTENT ======== -->
 <div class="z1">
   <!-- TOP BAR -->
-  <div class="top-bar" style="flex-wrap:wrap;gap:12px">
-    <div style="display:flex;align-items:center;gap:14px;flex-shrink:0">
-      <div style="width:32px;height:32px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(212,162,76,0.2);display:flex;align-items:center;justify-content:center;font-size:16px">⚽</div>
-      <div>
-        <h1 class="heading" style="font-size:18px;color:var(--text);line-height:1">Clutch Metrics</h1>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
-          <div style="width:6px;height:6px;background:var(--success);border-radius:50%;animation:gentlePulse 2s ease-in-out infinite"></div>
-          <span id="team-label" style="font-size:11px;color:var(--text-muted)">My Team</span>
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div style="width:32px;height:32px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(212,162,76,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚽</div>
+      <div style="min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <h1 class="heading" style="font-size:18px;color:var(--text);line-height:1">Clutch Metrics</h1>
+          <button onclick="openCreatorStampModal()" class="stamp-seal-btn" title="Ninad Hirani Official Stamp" style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#FFF7E6,#FFF1D0);border:1px solid #D4A24C;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;color:#7A5515;cursor:pointer;flex-shrink:0">
+            <span>★ NH MARK</span>
+          </button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;font-size:11px">
+          <div style="width:6px;height:6px;background:var(--success);border-radius:50%;animation:gentlePulse 2s ease-in-out infinite;flex-shrink:0"></div>
+          <span id="team-label" style="font-weight:600;color:var(--text);white-space:nowrap">My Team</span>
+          <span style="color:var(--text-muted)">vs</span>
+          <span id="f-opp-label" style="font-weight:600;color:var(--text-secondary);white-space:nowrap">Opponent</span>
           <span style="color:var(--border)">·</span>
-          <span id="sessionLabel" style="font-size:11px;color:var(--text-muted)">Live_Draft_01</span>
+          <span id="match-period-badge" class="badge-accent" style="font-size:9px;padding:1px 6px;white-space:nowrap">1st Half</span>
+          <span style="color:var(--border)">·</span>
+          <span id="sessionLabel" style="color:var(--text-muted);white-space:nowrap">Live_Draft_01</span>
         </div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <div class="toggle-wrap">
+    <div class="top-bar-right">
+      <div class="toggle-wrap" style="flex-shrink:0">
         <button onclick="setFilter('myteam')" id="f-cbs" class="filter-btn active"><span id="f-cbs-label">My Team</span></button>
-        <button onclick="setFilter('Opponent')" id="f-opp" class="filter-btn">Opponent</button>
+        <button onclick="setFilter('Opponent')" id="f-opp" class="filter-btn"><span id="f-opp-btn-label">Opponent</span></button>
         <button onclick="setFilter('Both')" id="f-both" class="filter-btn">Both</button>
       </div>
-      <button onclick="openModal('shot-modal')" class="btn-primary" style="padding:8px 16px;font-size:12px">+ Shot</button>
-      <button onclick="openModal('player-modal')" style="background:var(--accent-bg);border:1px solid rgba(212,162,76,0.2);color:var(--accent);padding:8px 16px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s">Players</button>
-      <button onclick="saveSession()" style="background:rgba(45,138,86,0.06);border:1px solid rgba(45,138,86,0.2);color:var(--success);padding:8px 16px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s">Save</button>
-      <button onclick="generateAIInsight()" style="background:var(--accent-bg);border:1px solid rgba(212,162,76,0.2);color:var(--text);padding:8px 16px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px">
+      <button onclick="openModal('shot-modal')" class="btn-primary" style="padding:8px 16px;font-size:12px;white-space:nowrap;flex-shrink:0">+ Shot</button>
+      <button onclick="openModal('player-modal')" style="background:var(--accent-bg);border:1px solid rgba(212,162,76,0.2);color:var(--accent);padding:8px 14px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0">Players</button>
+      <button onclick="openMatchSetup()" style="background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);padding:8px 14px;border-radius:10px;font-weight:600;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0">⚙ Match</button>
+      <button onclick="openExportModal()" style="background:rgba(74,127,181,0.08);border:1px solid rgba(74,127,181,0.25);color:var(--info);padding:8px 14px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0">Export</button>
+      <button onclick="saveSession()" style="background:rgba(45,138,86,0.06);border:1px solid rgba(45,138,86,0.2);color:var(--success);padding:8px 14px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0">Save</button>
+      <button onclick="generateAIInsight()" style="background:var(--accent-bg);border:1px solid rgba(212,162,76,0.2);color:var(--text);padding:8px 14px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         AI Intel
       </button>
-      <button onclick="doLogout()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:8px 14px;border-radius:10px;font-weight:600;font-size:11px;cursor:pointer;transition:all .2s">Logout</button>
+      <button onclick="doLogout()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:8px 12px;border-radius:10px;font-weight:600;font-size:11px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0">Logout</button>
     </div>
   </div>
 
@@ -360,22 +515,26 @@ footer{border-top:1px solid var(--border)}
             <span id="welcoming-date" style="font-size:11px;color:var(--text-muted);margin-top:2px;display:block">Loading...</span>
           </div>
         </div>
-        <div class="compact-kpis" style="display:flex;gap:10px">
-          <div style="padding:8px 16px;background:rgba(0,0,0,0.02);border-radius:12px;border:1px solid var(--border);text-align:center;min-width:70px">
+        <div class="compact-kpis" style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="padding:8px 14px;background:rgba(0,0,0,0.02);border-radius:12px;border:1px solid var(--border);text-align:center;min-width:65px">
             <p style="font-size:10px;color:var(--text-muted);margin:0">Shots</p>
-            <p id="kpi-shots" class="heading" style="font-size:22px;color:var(--text);margin:0;line-height:1.3">0</p>
+            <p id="kpi-shots" class="heading" style="font-size:20px;color:var(--text);margin:0;line-height:1.3">0</p>
           </div>
-          <div style="padding:8px 16px;background:rgba(0,0,0,0.02);border-radius:12px;border:1px solid var(--border);text-align:center;min-width:70px">
+          <div style="padding:8px 14px;background:rgba(0,0,0,0.02);border-radius:12px;border:1px solid var(--border);text-align:center;min-width:65px">
             <p style="font-size:10px;color:var(--text-muted);margin:0">On Target</p>
-            <p id="kpi-target" class="heading" style="font-size:22px;color:var(--info);margin:0;line-height:1.3">0</p>
+            <p id="kpi-target" class="heading" style="font-size:20px;color:var(--info);margin:0;line-height:1.3">0</p>
           </div>
-          <div style="padding:8px 16px;background:rgba(0,0,0,0.02);border-radius:12px;border:1px solid var(--border);text-align:center;min-width:70px">
+          <div style="padding:8px 14px;background:rgba(0,0,0,0.02);border-radius:12px;border:1px solid var(--border);text-align:center;min-width:65px">
             <p style="font-size:10px;color:var(--text-muted);margin:0">Goals</p>
-            <p id="kpi-goals" class="heading" style="font-size:22px;color:var(--success);margin:0;line-height:1.3">0</p>
+            <p id="kpi-goals" class="heading" style="font-size:20px;color:var(--success);margin:0;line-height:1.3">0</p>
           </div>
-          <div style="padding:8px 16px;background:rgba(0,0,0,0.02);border-radius:12px;border:1px solid var(--border);text-align:center;min-width:70px">
+          <div style="padding:8px 14px;background:rgba(0,0,0,0.02);border-radius:12px;border:1px solid var(--border);text-align:center;min-width:65px">
             <p style="font-size:10px;color:var(--text-muted);margin:0">Conv %</p>
-            <p id="kpi-conv" class="heading" style="font-size:22px;color:var(--accent);margin:0;line-height:1.3">0%</p>
+            <p id="kpi-conv" class="heading" style="font-size:20px;color:var(--accent);margin:0;line-height:1.3">0%</p>
+          </div>
+          <div style="padding:8px 14px;background:rgba(74,127,181,0.04);border-radius:12px;border:1px solid rgba(74,127,181,0.2);text-align:center;min-width:75px">
+            <p style="font-size:10px;color:var(--info);font-weight:700;margin:0">Total xG</p>
+            <p id="kpi-xg" class="heading" style="font-size:20px;color:var(--info);margin:0;line-height:1.3">0.00</p>
           </div>
         </div>
       </div>
@@ -402,6 +561,18 @@ footer{border-top:1px solid var(--border)}
           </div>
           <div id="table-body-scroll" style="padding:0">
             <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border);background:rgba(0,0,0,0.015);text-align:left;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">
+                  <th style="padding:8px 12px">Min</th>
+                  <th style="padding:8px 12px">Team</th>
+                  <th style="padding:8px 12px">Shooter / Action</th>
+                  <th style="padding:8px 12px">Type</th>
+                  <th style="padding:8px 12px">Zone</th>
+                  <th style="padding:8px 12px">Out</th>
+                  <th style="padding:8px 12px">xG</th>
+                  <th style="padding:8px 12px;text-align:right">Action</th>
+                </tr>
+              </thead>
               <tbody id="table-body" style="font-size:11px"></tbody>
             </table>
           </div>
@@ -410,16 +581,19 @@ footer{border-top:1px solid var(--border)}
 
       <!-- CENTER: Shot Map + Mistakes -->
       <div class="col-center" style="display:flex;flex-direction:column;gap:16px">
-        <div class="card" style="padding:18px;border-radius:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <p class="section-header" style="margin:0">Spatial Shot Map</p>
+        <div class="card" style="padding:18px;border-radius:16px;position:relative">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div>
+              <p class="section-header" style="margin:0">Spatial Shot Map</p>
+              <p style="font-size:10px;color:var(--text-muted);margin-top:2px">Tap pitch to place shot · Click dot for details</p>
+            </div>
             <div style="display:flex;gap:8px">
               <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)"><span style="width:7px;height:7px;border-radius:50%;background:var(--info);display:inline-block"></span>Us</span>
               <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)"><span style="width:7px;height:7px;border-radius:50%;background:var(--danger);display:inline-block"></span>Opp</span>
             </div>
           </div>
-          <div style="display:flex;justify-content:center;padding:8px 0">
-            <div class="pitch" id="heatmap-pitch" style="width:100%;max-width:280px">
+          <div style="display:flex;justify-content:center;padding:8px 0;position:relative">
+            <div class="pitch" id="heatmap-pitch" style="width:100%;max-width:280px;cursor:crosshair;position:relative" onclick="handlePitchClick(event)" title="Click anywhere on the pitch to log a shot at that position">
               <div class="pitch-line" style="width:100%;top:50%;border-color:rgba(255,255,255,0.3)"></div>
               <div class="pitch-line" style="width:60%;height:16%;top:0;left:20%;border-color:rgba(255,255,255,0.3)"></div>
               <div class="pitch-line" style="width:60%;height:16%;bottom:0;left:20%;border-color:rgba(255,255,255,0.3)"></div>
@@ -427,6 +601,8 @@ footer{border-top:1px solid var(--border)}
               <div style="position:absolute;top:50%;left:50%;width:5px;height:5px;background:rgba(255,255,255,0.4);border-radius:50%;transform:translate(-50%,-50%)"></div>
               <div style="position:absolute;top:0;left:35%;width:30%;height:6%;border:1px solid rgba(255,255,255,0.3);border-top:none"></div>
               <div style="position:absolute;bottom:0;left:35%;width:30%;height:6%;border:1px solid rgba(255,255,255,0.3);border-bottom:none"></div>
+              <!-- Interactive dot popover -->
+              <div id="dot-popover"></div>
             </div>
           </div>
         </div>
@@ -525,31 +701,52 @@ footer{border-top:1px solid var(--border)}
   </div>
 
   <!-- FOOTER -->
-  <footer style="padding:24px;margin-top:24px">
-    <div style="max-width:1440px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-      <p style="font-size:12px;color:var(--text-muted);max-width:600px;line-height:1.6">This tactical dashboard compiles shot coordinates, conversion metrics, turnovers, and positional build-up patterns to generate halftime coaching assessments.</p>
-      <p class="heading" style="font-size:14px;color:var(--accent);letter-spacing:.02em">Made by Parth Kumar</p>
+  <footer style="padding:28px 24px;margin-top:32px;border-top:1px solid var(--border);background:var(--surface)">
+    <div style="max-width:1440px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:34px;height:34px;border-radius:10px;background:var(--accent-bg);border:1px solid rgba(212,162,76,0.3);display:flex;align-items:center;justify-content:center;font-size:16px">⚽</div>
+        <div>
+          <p class="heading" style="font-size:14px;color:var(--text);margin:0;line-height:1.2">Clutch Metrics · Halftime Tactical Hub</p>
+          <p style="font-size:11px;color:var(--text-muted);margin:0">Real-time Shot Telemetry, Expected Goals (xG) & AI Match Adjustments</p>
+        </div>
+      </div>
+      
+      <!-- NINAD HIRANI OFFICIAL CREATOR STAMP -->
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <button onclick="openCreatorStampModal()" class="stamp-seal-btn" title="Inspect Ninad Hirani Official Provenance Seal" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#FFF9EE 0%,#FFF1D2 100%);border:1.5px solid #D4A24C;padding:8px 18px;border-radius:999px;cursor:pointer;box-shadow:0 3px 14px rgba(212,162,76,0.22)">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:linear-gradient(135deg,#E6B254,#B88628);color:#fff;border-radius:50%;font-size:12px;font-weight:900;box-shadow:0 2px 6px rgba(184,134,40,0.5)">★</span>
+          <span style="font-size:12px;font-weight:800;letter-spacing:0.04em;color:#7A5515">ENGINEERED & CRAFTED BY NINAD HIRANI</span>
+          <span style="background:rgba(212,162,76,0.25);border:1px solid rgba(212,162,76,0.4);color:#6B490E;padding:2px 8px;border-radius:6px;font-size:9px;font-weight:800;letter-spacing:0.08em">OFFICIAL STAMP</span>
+        </button>
+      </div>
     </div>
   </footer>
 </div>
 
+</div>
+
 <!-- ======== SHOT MODAL ======== -->
 <div id="shot-modal" class="modal">
-  <div class="card" style="padding:32px;border-radius:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:var(--shadow-lg)">
+  <div class="card" style="padding:32px;border-radius:20px;width:100%;max-width:440px;max-height:92vh;overflow-y:auto;position:relative;box-shadow:var(--shadow-lg)">
     <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent-soft))"></div>
-    <h2 class="heading" style="font-size:24px;color:var(--text);margin-bottom:4px">Log Event</h2>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:24px">Record attempt coordinates</p>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+      <h2 id="shot-modal-title" class="heading" style="font-size:24px;color:var(--text);margin:0">Log Event</h2>
+      <span id="modal-xg-badge" class="xg-badge">xG: ~0.35</span>
+    </div>
+    <p id="shot-modal-subtitle" style="font-size:12px;color:var(--text-muted);margin-bottom:20px">Record attempt coordinates and match context</p>
     <div style="display:flex;flex-direction:column;gap:14px">
-      <div>
-        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Minute</label>
-        <input type="number" id="m-min" class="inp" placeholder="e.g. 23">
-      </div>
-      <div>
-        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Team</label>
-        <select id="m-team" onchange="onTeamChange()" class="inp">
-          <option id="opt-myteam" value="myteam">My Team</option>
-          <option value="Opponent">Opponent</option>
-        </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Minute</label>
+          <input type="number" id="m-min" class="inp" placeholder="e.g. 23">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Team</label>
+          <select id="m-team" onchange="onTeamChange()" class="inp">
+            <option id="opt-myteam" value="myteam">My Team</option>
+            <option id="opt-opp" value="Opponent">Opponent</option>
+          </select>
+        </div>
       </div>
       <div id="shooter-cbs">
         <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Shooter</label>
@@ -561,7 +758,7 @@ footer{border-top:1px solid var(--border)}
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Shot Type</label>
-        <select id="m-type" onchange="onShotTypeChange()" class="inp">
+        <select id="m-type" onchange="onShotTypeChange(); updateModalXGPreview();" class="inp">
           <option>Normal Shot</option><option>Through Ball</option><option>Cross</option><option>Set Piece</option><option>Mistake</option><option>Rebound</option>
         </select>
       </div>
@@ -574,20 +771,22 @@ footer{border-top:1px solid var(--border)}
         <label style="font-size:12px;font-weight:600;color:var(--danger);display:block;margin-bottom:6px">⚠ Our Player Who Lost Possession</label>
         <select id="m-mistake-player" class="inp" style="border-color:rgba(192,57,43,0.3)"><option value="">— Select Player —</option></select>
       </div>
-      <div>
-        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Zone / Origin</label>
-        <select id="m-loc" class="inp">
-          <option value="Center Box">Center Box</option><option value="Left Box">Left Box</option><option value="Right Box">Right Box</option><option value="Outside Box">Outside Box</option><option value="Outside the Pitch">Outside the Pitch</option><option value="Far Range">Far Range</option>
-        </select>
-      </div>
-      <div>
-        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Outcome</label>
-        <select id="m-out" class="inp">
-          <option value="Miss">Miss</option><option value="On Target">On Target</option><option value="Goal">Goal</option>
-        </select>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Zone / Origin</label>
+          <select id="m-loc" onchange="updateModalXGPreview()" class="inp">
+            <option value="Center Box">Center Box</option><option value="Left Box">Left Box</option><option value="Right Box">Right Box</option><option value="Outside Box">Outside Box</option><option value="Outside the Pitch">Outside the Pitch</option><option value="Far Range">Far Range</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Outcome</label>
+          <select id="m-out" class="inp">
+            <option value="Miss">Miss</option><option value="On Target">On Target</option><option value="Goal">Goal</option>
+          </select>
+        </div>
       </div>
       <div style="display:flex;gap:12px;padding-top:8px">
-        <button onclick="logShot()" class="btn-primary" style="flex:1">Commit Event</button>
+        <button id="shot-modal-commit-btn" onclick="logShot()" class="btn-primary" style="flex:1">Commit Event</button>
         <button onclick="closeModal('shot-modal')" style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);padding:12px;border-radius:12px;font-weight:600;font-size:13px;cursor:pointer">Cancel</button>
       </div>
     </div>
@@ -606,6 +805,142 @@ footer{border-top:1px solid var(--border)}
     </div>
     <div id="player-list" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto"></div>
     <button onclick="closeModal('player-modal')" style="width:100%;margin-top:20px;background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);padding:12px;border-radius:12px;font-weight:600;font-size:13px;cursor:pointer">Done</button>
+  </div>
+</div>
+
+<!-- ======== MATCH SETUP MODAL ======== -->
+<div id="match-setup-modal" class="modal">
+  <div class="card" style="padding:32px;border-radius:24px;width:100%;max-width:440px;position:relative;box-shadow:var(--shadow-lg)">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--info))"></div>
+    <h2 class="heading" style="font-size:24px;color:var(--text);margin-bottom:4px">Match Configuration</h2>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px">Tune match metadata and opponent targeting</p>
+    
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Our Team Name</label>
+        <input id="cfg-team-name" class="inp" placeholder="e.g. CB South">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Opponent Team Name</label>
+        <input id="cfg-opp-name" class="inp" placeholder="e.g. North Penn FC">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px">Match Period</label>
+        <select id="cfg-match-half" class="inp">
+          <option value="1st Half">1st Half</option>
+          <option value="2nd Half">2nd Half</option>
+          <option value="Extra Time">Extra Time</option>
+          <option value="Full Time">Full Time</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button onclick="saveMatchSetup()" class="btn-primary" style="flex:1">Save Settings</button>
+        <button onclick="closeModal('match-setup-modal')" style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);padding:12px;border-radius:12px;font-weight:600;font-size:13px;cursor:pointer">Cancel</button>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px">
+        <p style="font-size:11px;font-weight:700;color:var(--danger);text-transform:uppercase;margin-bottom:6px">Dangerous Zone</p>
+        <button onclick="resetMatch()" style="width:100%;background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.3);color:var(--danger);padding:10px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s">
+          Clear Active Pitch / Start New Match
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== EXPORT MODAL ======== -->
+<div id="export-modal" class="modal">
+  <div class="card" style="padding:32px;border-radius:24px;width:100%;max-width:440px;position:relative;box-shadow:var(--shadow-lg)">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--info),var(--accent))"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <h2 class="heading" style="font-size:24px;color:var(--text);margin:0">Export & Share</h2>
+      <span class="badge-accent">Ninad Hirani Edition</span>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:20px">Download telemetry or copy halftime briefing for the team</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <button onclick="exportCSV(); closeModal('export-modal');" style="display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.02);border:1px solid var(--border);padding:14px 16px;border-radius:14px;cursor:pointer;text-align:left;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:22px">📊</span>
+        <div style="flex:1">
+          <p style="font-size:13px;font-weight:700;color:var(--text);margin:0">Export CSV Spreadsheet</p>
+          <p style="font-size:11px;color:var(--text-muted);margin:0">Complete shot telemetry with xG, players & zones</p>
+        </div>
+      </button>
+
+      <button onclick="copyHalftimeBriefing(); closeModal('export-modal');" style="display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.02);border:1px solid var(--border);padding:14px 16px;border-radius:14px;cursor:pointer;text-align:left;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:22px">💬</span>
+        <div style="flex:1">
+          <p style="font-size:13px;font-weight:700;color:var(--text);margin:0">Copy Halftime Briefing</p>
+          <p style="font-size:11px;color:var(--text-muted);margin:0">Formatted text report ready for WhatsApp or coach group</p>
+        </div>
+      </button>
+
+      <button onclick="exportJSON(); closeModal('export-modal');" style="display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.02);border:1px solid var(--border);padding:14px 16px;border-radius:14px;cursor:pointer;text-align:left;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:22px">💾</span>
+        <div style="flex:1">
+          <p style="font-size:13px;font-weight:700;color:var(--text);margin:0">Download Full JSON Backup</p>
+          <p style="font-size:11px;color:var(--text-muted);margin:0">Raw event data and rosters with cryptographic stamp</p>
+        </div>
+      </button>
+
+      <button onclick="printMatchReport(); closeModal('export-modal');" style="display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.02);border:1px solid var(--border);padding:14px 16px;border-radius:14px;cursor:pointer;text-align:left;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:22px">🖨️</span>
+        <div style="flex:1">
+          <p style="font-size:13px;font-weight:700;color:var(--text);margin:0">Print Match Tactical Sheet</p>
+          <p style="font-size:11px;color:var(--text-muted);margin:0">Clean printable physical tactical summary</p>
+        </div>
+      </button>
+
+      <button onclick="closeModal('export-modal')" style="margin-top:8px;background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);padding:12px;border-radius:12px;font-weight:600;font-size:13px;cursor:pointer">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======== NINAD HIRANI CREATOR STAMP & PROVENANCE MODAL ======== -->
+<div id="creator-stamp-modal" class="modal">
+  <div class="card" style="padding:36px;border-radius:24px;width:100%;max-width:500px;position:relative;box-shadow:var(--shadow-lg);border-color:rgba(212,162,76,0.3);background:radial-gradient(circle at 50% 0%,#FFFDF9 0%,#FFF9F0 100%)">
+    <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#D4A24C,#F3E0A7,#D4A24C)"></div>
+    
+    <div style="text-align:center;margin-bottom:20px">
+      <!-- Interactive 3D Gold Wax Seal -->
+      <div id="interactive-seal" class="interactive-wax-seal seal-stamped" onclick="applyStampImprint()" title="Click to imprint creator seal!">
+        <div style="font-size:22px;font-weight:900;line-height:1">★</div>
+        <div style="font-size:9px;font-weight:900;letter-spacing:0.12em;margin-top:2px">NINAD</div>
+        <div style="font-size:9px;font-weight:900;letter-spacing:0.12em">HIRANI</div>
+        <div style="font-size:7px;font-weight:800;letter-spacing:0.06em;opacity:0.85;margin-top:2px">PROVENANCE</div>
+      </div>
+
+      <span class="badge-accent" style="margin-bottom:6px;display:inline-block">AUTHENTIC CREATOR CERTIFICATE</span>
+      <h2 class="heading" style="font-size:26px;color:#8F6317;line-height:1.2;margin:4px 0">Engineered by Ninad Hirani</h2>
+      <p style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.15em">Architect & Systems Developer</p>
+    </div>
+
+    <div style="background:rgba(212,162,76,0.06);border:1px solid rgba(212,162,76,0.25);border-radius:14px;padding:16px;margin-bottom:20px">
+      <p style="font-size:12px;color:var(--text);line-height:1.7;margin-bottom:12px;font-style:italic">
+        "Tactical football analysis demands instantaneous clarity under extreme halftime pressure. Clutch Metrics was engineered from the ground up by Ninad Hirani to turn chaotic pitch telemetry into decisive victories."
+      </p>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px;border-top:1px solid rgba(212,162,76,0.2);padding-top:10px">
+        <div>
+          <span style="color:var(--text-muted);display:block">Build Signature:</span>
+          <strong style="color:var(--text);font-family:monospace">NH-CLUTCH-2026.1</strong>
+        </div>
+        <div>
+          <span style="color:var(--text-muted);display:block">Edition:</span>
+          <strong style="color:var(--accent)">Tactical Core Alpha</strong>
+        </div>
+      </div>
+    </div>
+
+    <p id="stamp-status-msg" style="font-size:11px;text-align:center;color:var(--text-muted);margin-bottom:16px">
+      Tap the gold seal above to apply a tactile stamp imprint
+    </p>
+
+    <div style="display:flex;gap:10px">
+      <button onclick="copyCreatorSignature()" class="btn-primary" style="flex:1;padding:12px 14px;font-size:12px">Copy Verified Seal</button>
+      <button onclick="closeModal('creator-stamp-modal')" style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);padding:12px;border-radius:12px;font-weight:600;font-size:12px;cursor:pointer">Close</button>
+    </div>
   </div>
 </div>
 
@@ -707,7 +1042,9 @@ setTimeout(() => {
 }, 12000);
 
 // -- APPLICATION STATE --------------------------------------------------------
-let currentUser=null, currentEmail='', teamName='My Team', allShots=[], filterMode='myteam', savedSessions={}, players=[], playerFilter='ALL', tChart, lChart, oChart;
+let currentUser=null, currentEmail='', teamName='My Team', opponentName='Opponent', matchHalf='1st Half', allShots=[], filterMode='myteam', savedSessions={}, players=[], playerFilter='ALL', tChart, lChart, oChart;
+let pendingShotCoords = null;
+let editingShotId = null;
 
 const firebaseConfig={
   apiKey:'AIzaSyDox7iut0-sxwNHLS6JpDQt6taMIT_bYfc',
@@ -724,13 +1061,17 @@ let auth=null, db=null;
 const uKey=()=>`cm_data_${currentUser}`;
 const pKey=()=>`cm_players_${currentUser}`;
 const teamKey=()=>`cm_team_${currentUser}`;
+const oppKey=()=>`cm_opp_${currentUser}`;
+const halfKey=()=>`cm_half_${currentUser}`;
 
 // -- CLOUD SYNC ---------------------------------------------------------------
 async function syncToCloud() {
-  if (!db || !currentUser) return;
+  if (!db || !currentUser || currentUser === 'demo_coach') return;
   try {
     await db.collection('users').doc(currentUser).set({
       teamName: teamName,
+      opponentName: opponentName,
+      matchHalf: matchHalf,
       players: players,
       savedSessions: savedSessions,
       allShots: allShots,
@@ -756,7 +1097,6 @@ if(firebaseReady){
       console.warn("Firestore persistence failed synchronously:", e);
     }
 
-    // Google auth now uses popup flow, no getRedirectResult needed
     auth.onAuthStateChanged(user=>{
       if(user){
         currentUser=user.uid;
@@ -772,6 +1112,8 @@ if(firebaseReady){
             if (data) {
               hasCloudData = true;
               if (data.teamName !== undefined) teamName = data.teamName;
+              if (data.opponentName !== undefined) opponentName = data.opponentName;
+              if (data.matchHalf !== undefined) matchHalf = data.matchHalf;
               if (data.players !== undefined) players = data.players;
               if (data.savedSessions !== undefined) savedSessions = data.savedSessions;
               if (data.allShots !== undefined) allShots = data.allShots;
@@ -780,6 +1122,8 @@ if(firebaseReady){
           
           if (!hasCloudData) {
             teamName = localStorage.getItem(teamKey()) || user.displayName || 'My Team';
+            opponentName = localStorage.getItem(oppKey()) || 'Opponent';
+            matchHalf = localStorage.getItem(halfKey()) || '1st Half';
             try { savedSessions = JSON.parse(localStorage.getItem(uKey()) || '{}'); } catch(e) { savedSessions = {}; }
             try { players = JSON.parse(localStorage.getItem(pKey()) || '[]'); } catch(e) { players = []; }
             try { allShots = JSON.parse(localStorage.getItem('cm_active_'+currentUser) || '[]'); } catch(e) { allShots = []; }
@@ -787,6 +1131,8 @@ if(firebaseReady){
           } else {
             try {
               localStorage.setItem(teamKey(), teamName);
+              localStorage.setItem(oppKey(), opponentName);
+              localStorage.setItem(halfKey(), matchHalf);
               localStorage.setItem(uKey(), JSON.stringify(savedSessions));
               localStorage.setItem(pKey(), JSON.stringify(players));
               localStorage.setItem('cm_active_'+currentUser, JSON.stringify(allShots));
@@ -812,6 +1158,8 @@ if(firebaseReady){
         }).catch(err => {
           console.error("Firestore fetch error/timeout:", err);
           teamName = localStorage.getItem(teamKey()) || user.displayName || 'My Team';
+          opponentName = localStorage.getItem(oppKey()) || 'Opponent';
+          matchHalf = localStorage.getItem(halfKey()) || '1st Half';
           try { savedSessions = JSON.parse(localStorage.getItem(uKey()) || '{}'); } catch(e) { savedSessions = {}; }
           try { players = JSON.parse(localStorage.getItem(pKey()) || '[]'); } catch(e) { players = []; }
           try { allShots = JSON.parse(localStorage.getItem('cm_active_'+currentUser) || '[]'); } catch(e) { allShots = []; }
@@ -830,12 +1178,12 @@ if(firebaseReady){
           }
 
           updateUI();
-          showToast('Signed in (Offline)', 'info');
+          showToast('Signed in (Offline Cache)', 'info');
           showLoading(false);
         });
         return;
       }
-      currentUser=null; currentEmail=''; teamName='My Team'; allShots=[]; savedSessions={}; players=[]; playerFilter='ALL'; filterMode='myteam';
+      currentUser=null; currentEmail=''; teamName='My Team'; opponentName='Opponent'; matchHalf='1st Half'; allShots=[]; savedSessions={}; players=[]; playerFilter='ALL'; filterMode='myteam';
       if(tChart) { tChart.destroy(); tChart=null; }
       if(lChart) { lChart.destroy(); lChart=null; }
       if(oChart) { oChart.destroy(); oChart=null; }
@@ -861,10 +1209,21 @@ if(firebaseReady){
 
 function applyTeamName(){
   const t=teamName||'My Team';
-  document.getElementById('team-label').innerText=t;
-  document.getElementById('f-cbs-label').innerText=t;
-  document.getElementById('opt-myteam').innerText=t;
-  document.getElementById('roster-subtitle').innerText=`Manage active roster for ${t}.`;
+  const opp=opponentName||'Opponent';
+  const h=matchHalf||'1st Half';
+
+  const tl = document.getElementById('team-label'); if(tl) tl.innerText=t;
+  const fcbs = document.getElementById('f-cbs-label'); if(fcbs) fcbs.innerText=t;
+  const optMy = document.getElementById('opt-myteam'); if(optMy) optMy.innerText=t;
+  const optOpp = document.getElementById('opt-opp'); if(optOpp) optOpp.innerText=opp;
+  const oppLbl = document.getElementById('f-opp-label'); if(oppLbl) oppLbl.innerText=opp;
+  const oppBtn = document.getElementById('f-opp-btn-label'); if(oppBtn) oppBtn.innerText=opp;
+  const badge = document.getElementById('match-period-badge'); if(badge) badge.innerText=`${h} vs ${opp}`;
+  const rSub = document.getElementById('roster-subtitle'); if(rSub) rSub.innerText=`Manage active roster for ${t}.`;
+
+  const setTeam = document.getElementById('cfg-team-name'); if(setTeam) setTeam.value=t;
+  const setOpp = document.getElementById('cfg-opp-name'); if(setOpp) setOpp.value=opp;
+  const setHalf = document.getElementById('cfg-match-half'); if(setHalf) setHalf.value=h;
 }
 
 // -- TAB NAVIGATION -----------------------------------------------------------
@@ -943,6 +1302,13 @@ async function doSignup(){
 }
 
 function doLogout(){
+  if(currentUser === 'demo_coach'){
+    currentUser=null;
+    document.getElementById('auth-screen').classList.remove('hidden');
+    updateUI();
+    showToast('Exited demo mode.', 'info');
+    return;
+  }
   if(!auth){
     document.getElementById('auth-screen').classList.remove('hidden');
     updateUI();
@@ -951,6 +1317,54 @@ function doLogout(){
   showLoading(true, "Signing out...");
   auth.signOut();
   showToast('Signed out successfully.', 'info');
+}
+
+// -- DEMO MODE ----------------------------------------------------------------
+function launchDemoMode() {
+  showLoading(true, "Launching Tactical Demo Workspace...");
+  setTimeout(() => {
+    currentUser = 'demo_coach';
+    currentEmail = 'ninad.tactics@clutch.local';
+    teamName = 'CB South';
+    opponentName = 'North Penn FC';
+    matchHalf = '1st Half';
+
+    players = ['#10 Smith', '#9 Kane', '#7 Sterling', '#8 De Bruyne', '#4 Van Dijk', '#6 Rodri'];
+
+    allShots = [
+      { id: 101, min: '8', team: 'CB South', shooter: '#10 Smith', assister: '#8 De Bruyne', type: 'Normal Shot', loc: 'Center Box', out: 'Goal', x: 50.2, y: 11.5, xg: 0.52, mistakePlayer: '' },
+      { id: 102, min: '14', team: 'CB South', shooter: '#9 Kane', assister: '', type: 'Through Ball', loc: 'Left Box', out: 'On Target', x: 26.5, y: 13.8, xg: 0.28, mistakePlayer: '' },
+      { id: 103, min: '19', team: 'North Penn FC', shooter: 'Miller', assister: '', type: 'Mistake', loc: 'Center Box', out: 'Goal', x: 48.9, y: 88.2, xg: 0.54, mistakePlayer: '#4 Van Dijk' },
+      { id: 104, min: '23', team: 'CB South', shooter: '#7 Sterling', assister: '#10 Smith', type: 'Cross', loc: 'Right Box', out: 'Miss', x: 74.8, y: 15.2, xg: 0.16, mistakePlayer: '' },
+      { id: 105, min: '29', team: 'North Penn FC', shooter: 'Davies', assister: 'Evans', type: 'Normal Shot', loc: 'Outside Box', out: 'Miss', x: 55.4, y: 72.1, xg: 0.08, mistakePlayer: '' },
+      { id: 106, min: '34', team: 'CB South', shooter: '#8 De Bruyne', assister: '', type: 'Set Piece', loc: 'Outside Box', out: 'On Target', x: 46.8, y: 27.5, xg: 0.14, mistakePlayer: '' },
+      { id: 107, min: '39', team: 'CB South', shooter: '#9 Kane', assister: '#7 Sterling', type: 'Through Ball', loc: 'Center Box', out: 'Goal', x: 52.1, y: 10.2, xg: 0.62, mistakePlayer: '' },
+      { id: 108, min: '43', team: 'North Penn FC', shooter: 'Miller', assister: '', type: 'Normal Shot', loc: 'Far Range', out: 'Miss', x: 38.2, y: 56.4, xg: 0.04, mistakePlayer: '' },
+      { id: 109, min: '45', team: 'CB South', shooter: '#10 Smith', assister: '', type: 'Rebound', loc: 'Center Box', out: 'Goal', x: 49.0, y: 8.5, xg: 0.68, mistakePlayer: '' }
+    ];
+
+    savedSessions = {
+      'H1 vs Central Bucks': { data: [...allShots.slice(0, 4)], date: 'Yesterday' }
+    };
+
+    document.getElementById('auth-screen').classList.add('hidden');
+    applyTeamName();
+
+    const wb = document.getElementById('welcoming-banner');
+    if (wb) {
+      wb.style.display = 'block';
+      document.getElementById('welcoming-coach').innerText = `Demo Workspace · Ninad Hirani Edition`;
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('welcoming-date').innerText = new Date().toLocaleDateString('en-US', options) + ' · Live Match Demo';
+    }
+
+    renderPlayerList();
+    refreshPlayerSelects();
+    updatePlayerFilterBar();
+    updateUI();
+    showLoading(false);
+    showToast('Loaded demo match: CB South vs North Penn FC', 'ok');
+  }, 400);
 }
 
 // -- TOASTS -------------------------------------------------------------------
@@ -975,7 +1389,7 @@ function addPlayer(){
   const inp=document.getElementById('new-player'), name=inp.value.trim();
   if(!name||players.includes(name))return;
   players.push(name); inp.value='';
-  if(currentUser) {
+  if(currentUser && currentUser !== 'demo_coach') {
     localStorage.setItem(pKey(),JSON.stringify(players));
     syncToCloud();
   }
@@ -988,7 +1402,7 @@ function addPlayer(){
 function removePlayer(name){
   players=players.filter(p=>p!==name);
   if(playerFilter===name) playerFilter='ALL';
-  if(currentUser) {
+  if(currentUser && currentUser !== 'demo_coach') {
     localStorage.setItem(pKey(),JSON.stringify(players));
     syncToCloud();
   }
@@ -1013,9 +1427,9 @@ function refreshPlayerSelects(){
   const opts='<option value="">— Select Shooter —</option>'+players.map(p=>`<option>${p}</option>`).join('');
   const aOpts='<option value="">— No Assister —</option>'+players.map(p=>`<option>${p}</option>`).join('');
   const mOpts='<option value="">— Select Player —</option>'+players.map(p=>`<option>${p}</option>`).join('');
-  document.getElementById('m-shooter-sel').innerHTML=opts;
-  document.getElementById('m-assist-sel').innerHTML=aOpts;
-  document.getElementById('m-mistake-player').innerHTML=mOpts;
+  const sSel = document.getElementById('m-shooter-sel'); if(sSel) sSel.innerHTML=opts;
+  const aSel = document.getElementById('m-assist-sel'); if(aSel) aSel.innerHTML=aOpts;
+  const mSel = document.getElementById('m-mistake-player'); if(mSel) mSel.innerHTML=mOpts;
 }
 
 function updatePlayerFilterBar(){
@@ -1035,23 +1449,170 @@ function setPlayerFilter(p){
   showToast(`Filter: ${p}`, 'info');
 }
 
+// -- EXPECTED GOALS (xG) MODEL ------------------------------------------------
+function calculateXG(s) {
+  if (!s) return 0.12;
+  const isOpp = s.team === (opponentName || 'Opponent');
+  const targetGoalY = isOpp ? 100 : 0;
+  const sy = s.y !== undefined ? s.y : 14;
+  const sx = s.x !== undefined ? s.x : 50;
+
+  const dy = Math.abs(sy - targetGoalY);
+  const dx = Math.abs(sx - 50);
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  let val = 0.85 * Math.exp(-0.062 * dist);
+  const angleFactor = Math.cos((Math.min(50, dx) / 55) * (Math.PI / 2));
+  val *= Math.max(0.25, angleFactor);
+
+  if (s.type === 'Through Ball') val *= 1.35;
+  else if (s.type === 'Rebound') val *= 1.45;
+  else if (s.type === 'Mistake') val *= 1.30;
+  else if (s.type === 'Cross') val *= 0.82;
+  else if (s.type === 'Set Piece') val *= 0.90;
+
+  if (s.loc === 'Center Box') val = Math.max(val, 0.32);
+  else if (s.loc === 'Left Box' || s.loc === 'Right Box') val = Math.min(val, 0.26);
+  else if (s.loc === 'Outside Box') val = Math.min(val, 0.14);
+  else if (s.loc === 'Far Range') val = Math.min(val, 0.05);
+  else if (s.loc === 'Outside the Pitch') val = 0.02;
+
+  return Math.min(0.96, Math.max(0.02, parseFloat(val.toFixed(2))));
+}
+
+function updateModalXGPreview() {
+  const badge = document.getElementById('modal-xg-badge');
+  if (!badge) return;
+  const isMine = document.getElementById('m-team').value === 'myteam';
+  const type = document.getElementById('m-type').value;
+  const loc = document.getElementById('m-loc').value;
+  const tempShot = {
+    team: isMine ? teamName : (opponentName || 'Opponent'),
+    type,
+    loc,
+    x: pendingShotCoords ? pendingShotCoords.x : 50,
+    y: pendingShotCoords ? pendingShotCoords.y : (isMine ? 12 : 88)
+  };
+  const xg = calculateXG(tempShot);
+  badge.innerText = `xG: ~${xg.toFixed(2)}`;
+}
+
+// -- PITCH INTERACTION & POPOVER ----------------------------------------------
+function handlePitchClick(e) {
+  if (e.target.closest('.shot-dot') || e.target.closest('#dot-popover')) return;
+  const pitch = document.getElementById('heatmap-pitch');
+  if (!pitch) return;
+
+  const rect = pitch.getBoundingClientRect();
+  const clickX = Math.max(2, Math.min(98, ((e.clientX - rect.left) / rect.width) * 100));
+  const clickY = Math.max(2, Math.min(98, ((e.clientY - rect.top) / rect.height) * 100));
+
+  pendingShotCoords = { x: parseFloat(clickX.toFixed(1)), y: parseFloat(clickY.toFixed(1)) };
+  editingShotId = null;
+
+  const isTopHalf = clickY <= 50;
+  const normY = isTopHalf ? clickY : (100 - clickY);
+  const targetTeam = isTopHalf ? 'myteam' : 'Opponent';
+
+  let autoLoc = 'Center Box';
+  if (normY <= 18) {
+    if (clickX >= 34 && clickX <= 66) autoLoc = 'Center Box';
+    else if (clickX < 34) autoLoc = 'Left Box';
+    else autoLoc = 'Right Box';
+  } else if (normY <= 38) {
+    autoLoc = 'Outside Box';
+  } else {
+    autoLoc = 'Far Range';
+  }
+
+  showPitchPlacementPing(clickX, clickY);
+
+  openModal('shot-modal');
+  document.getElementById('m-team').value = targetTeam;
+  document.getElementById('m-loc').value = autoLoc;
+  onTeamChange();
+  updateModalXGPreview();
+  showToast(`Position set: ${autoLoc} (${pendingShotCoords.x}%, ${pendingShotCoords.y}%)`, 'info');
+}
+
+function showPitchPlacementPing(x, y) {
+  const pitch = document.getElementById('heatmap-pitch');
+  if (!pitch) return;
+  const oldPing = pitch.querySelector('.pitch-placement-ping');
+  if (oldPing) oldPing.remove();
+
+  const ping = document.createElement('div');
+  ping.className = 'pitch-placement-ping';
+  ping.style.cssText = `left:${x}%;top:${y}%;position:absolute;width:24px;height:24px;border-radius:50%;border:2px solid var(--accent);transform:translate(-50%,-50%);pointer-events:none;z-index:25;animation:pingPulse 1.2s ease-out infinite`;
+  pitch.appendChild(ping);
+  setTimeout(() => { if (ping.parentNode) ping.remove(); }, 4000);
+}
+
+function showDotPopover(shot, e) {
+  if (e) e.stopPropagation();
+  const popover = document.getElementById('dot-popover');
+  if (!popover) return;
+
+  const xgVal = shot.xg !== undefined ? shot.xg : calculateXG(shot);
+  popover.innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:${shot.team===teamName?'var(--info)':'var(--danger)'};margin-bottom:3px;display:flex;justify-content:space-between;align-items:center">
+      <span>${shot.team} · ${shot.min}'</span>
+      <span class="xg-badge">xG: ${xgVal.toFixed(2)}</span>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">${shot.shooter}</div>
+    ${shot.assister ? `<div style="font-size:10px;color:var(--accent);margin-bottom:2px">↗ Assist: ${shot.assister}</div>` : ''}
+    ${shot.mistakePlayer ? `<div style="font-size:10px;color:var(--danger);margin-bottom:2px">⚠ Turnover: ${shot.mistakePlayer}</div>` : ''}
+    <div style="font-size:10px;color:var(--text-secondary);margin-bottom:8px">${shot.type} · ${shot.loc} · <strong style="color:${shot.out==='Goal'?'var(--success)':shot.out==='On Target'?'var(--info)':'var(--text-muted)'}">${shot.out}</strong></div>
+    <div style="display:flex;gap:6px">
+      <button onclick="editShot(${shot.id}); hideDotPopover();" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer">Edit</button>
+      <button onclick="delShot(${shot.id}); hideDotPopover();" style="flex:1;background:rgba(192,57,43,0.1);color:var(--danger);border:1px solid rgba(192,57,43,0.3);border-radius:6px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer">Delete</button>
+      <button onclick="hideDotPopover()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer">&times;</button>
+    </div>
+  `;
+
+  const leftPos = Math.min(Math.max(12, shot.x), 72);
+  const topPos = Math.min(Math.max(16, shot.y), 78);
+  popover.style.left = leftPos + '%';
+  popover.style.top = topPos + '%';
+  popover.style.display = 'block';
+}
+
+function hideDotPopover() {
+  const popover = document.getElementById('dot-popover');
+  if (popover) popover.style.display = 'none';
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#dot-popover') && !e.target.closest('.shot-dot')) {
+    hideDotPopover();
+  }
+});
+
 // -- MODALS -------------------------------------------------------------------
 function openModal(id){
   document.getElementById(id).classList.add('active');
-  if(id==='shot-modal'){
+  if(id==='shot-modal' && !editingShotId){
     refreshPlayerSelects();
     ['m-min','m-shooter-txt','m-assist-txt'].forEach(x=>document.getElementById(x).value='');
     document.getElementById('m-team').value='myteam'; 
     document.getElementById('m-type').value='Normal Shot'; 
     document.getElementById('m-out').value='Miss'; 
+    document.getElementById('shot-modal-title').innerText = 'Log Event';
+    document.getElementById('shot-modal-subtitle').innerText = 'Record attempt coordinates and match context';
+    document.getElementById('shot-modal-commit-btn').innerText = 'Commit Event';
     onTeamChange();
     onShotTypeChange();
+    updateModalXGPreview();
   }
   if(id==='player-modal') renderPlayerList();
 }
 
 function closeModal(id){
   document.getElementById(id).classList.remove('active');
+  if (id === 'shot-modal') {
+    editingShotId = null;
+    pendingShotCoords = null;
+  }
 }
 
 function onTeamChange(){
@@ -1061,6 +1622,7 @@ function onTeamChange(){
   document.getElementById('assist-cbs').style.display = isMine ? 'block' : 'none';
   document.getElementById('assist-opp').style.display = !isMine ? 'block' : 'none';
   onShotTypeChange();
+  updateModalXGPreview();
 }
 
 function onShotTypeChange(){
@@ -1090,29 +1652,93 @@ function logShot(){
   const assister=isMine?document.getElementById('m-assist-sel').value:document.getElementById('m-assist-txt').value.trim();
   const loc=document.getElementById('m-loc').value;
   const z=zones[loc]||zones['Outside Box'];
-  const team=isMine?teamName:'Opponent';
+  const team=isMine?teamName:(opponentName || 'Opponent');
   let mistakePlayer = '';
   if(!isMine && type==='Mistake'){
     mistakePlayer = document.getElementById('m-mistake-player').value;
   }
-  allShots.push({
-    id:Date.now(),min:document.getElementById('m-min').value||'0',
-    team,shooter:shooter||'—',assister:assister||'',type,loc,out:outcome,mistakePlayer,
-    x:z.x+(Math.random()*6-3),
-    y:!isMine?100-(z.y+(Math.random()*4-2)):z.y+(Math.random()*4-2)
-  });
-  if(currentUser) {
+
+  let finalX = pendingShotCoords ? pendingShotCoords.x : (z.x + (Math.random()*6 - 3));
+  let finalY = pendingShotCoords ? pendingShotCoords.y : (!isMine ? 100 - (z.y + (Math.random()*4 - 2)) : z.y + (Math.random()*4 - 2));
+
+  const shotObj = {
+    min: document.getElementById('m-min').value || '0',
+    team,
+    shooter: shooter || '—',
+    assister: assister || '',
+    type,
+    loc,
+    out: outcome,
+    mistakePlayer,
+    x: parseFloat(finalX.toFixed(1)),
+    y: parseFloat(finalY.toFixed(1))
+  };
+  shotObj.xg = calculateXG(shotObj);
+
+  if (editingShotId) {
+    const idx = allShots.findIndex(s => s.id === editingShotId);
+    if (idx !== -1) {
+      shotObj.id = editingShotId;
+      allShots[idx] = shotObj;
+    }
+    editingShotId = null;
+    pendingShotCoords = null;
+    showToast(`Event updated: ${team} (${outcome}).`);
+  } else {
+    shotObj.id = Date.now();
+    allShots.push(shotObj);
+    pendingShotCoords = null;
+    showToast(`Event logged: ${team} (${outcome}).`);
+  }
+
+  if(currentUser && currentUser !== 'demo_coach') {
     localStorage.setItem('cm_active_'+currentUser, JSON.stringify(allShots));
     syncToCloud();
   }
   closeModal('shot-modal'); 
   updateUI();
-  showToast(`Event logged: ${team} (${outcome}).`);
+}
+
+function editShot(id) {
+  const s = allShots.find(x => x.id === id);
+  if (!s) return;
+  editingShotId = id;
+  pendingShotCoords = { x: s.x, y: s.y };
+
+  openModal('shot-modal');
+  document.getElementById('shot-modal-title').innerText = 'Edit Event';
+  document.getElementById('shot-modal-subtitle').innerText = `Editing minute ${s.min}' shot event`;
+  document.getElementById('shot-modal-commit-btn').innerText = 'Update Event';
+
+  document.getElementById('m-min').value = s.min || '';
+  const isMine = s.team === teamName;
+  document.getElementById('m-team').value = isMine ? 'myteam' : 'Opponent';
+  onTeamChange();
+
+  if (isMine) {
+    document.getElementById('m-shooter-sel').value = s.shooter || '';
+    document.getElementById('m-assist-sel').value = s.assister || '';
+  } else {
+    document.getElementById('m-shooter-txt').value = s.shooter || '';
+    document.getElementById('m-assist-txt').value = s.assister || '';
+  }
+
+  document.getElementById('m-type').value = s.type || 'Normal Shot';
+  onShotTypeChange();
+
+  if (!isMine && s.type === 'Mistake') {
+    document.getElementById('m-mistake-player').value = s.mistakePlayer || '';
+  }
+
+  document.getElementById('m-loc').value = s.loc || 'Center Box';
+  document.getElementById('m-out').value = s.out || 'Miss';
+
+  updateModalXGPreview();
 }
 
 function delShot(id){
   allShots=allShots.filter(s=>s.id!==id);
-  if(currentUser) {
+  if(currentUser && currentUser !== 'demo_coach') {
     localStorage.setItem('cm_active_'+currentUser, JSON.stringify(allShots));
     syncToCloud();
   }
@@ -1126,50 +1752,66 @@ function setFilter(m){
   ['cbs','opp','both'].forEach(x=>document.getElementById('f-'+x).classList.remove('active'));
   document.getElementById(m==='myteam'?'f-cbs':m==='Opponent'?'f-opp':'f-both').classList.add('active');
   updateUI();
-  showToast(`Scope: ${m==='myteam'?teamName:m}`, 'info');
+  showToast(`Scope: ${m==='myteam'?teamName:(m==='Opponent'?(opponentName||'Opponent'):'Both')}`, 'info');
 }
 
 function updateUI(){
   try {
-    const filterLabel=filterMode==='myteam'?teamName:filterMode;
-    let data=allShots.filter(s=>filterMode==='Both'||s.team===filterLabel);
+    const oppLabel = opponentName || 'Opponent';
+    const filterLabel = filterMode === 'myteam' ? teamName : (filterMode === 'Opponent' ? oppLabel : 'Both');
+    let data = allShots.filter(s => filterMode === 'Both' || s.team === filterLabel || (filterMode === 'Opponent' && s.team !== teamName));
     
-    if(playerFilter!=='ALL'){
-      data=data.filter(s=>(s.shooter===playerFilter && s.team===teamName) || (s.assister===playerFilter && s.team===teamName) || (s.team==='Opponent' && s.mistakePlayer===playerFilter));
+    if(playerFilter !== 'ALL'){
+      data = data.filter(s => (s.shooter === playerFilter && s.team === teamName) || (s.assister === playerFilter && s.team === teamName) || (s.team !== teamName && s.mistakePlayer === playerFilter));
     }
     
-    const goals=data.filter(s=>s.out==='Goal').length;
-    const target=data.filter(s=>s.out!=='Miss').length;
+    const goals = data.filter(s => s.out === 'Goal').length;
+    const target = data.filter(s => s.out !== 'Miss').length;
+    const totalXg = data.reduce((acc, s) => acc + (s.xg !== undefined ? s.xg : calculateXG(s)), 0);
     
     const kpiShots = document.getElementById('kpi-shots');
     const kpiTarget = document.getElementById('kpi-target');
     const kpiGoals = document.getElementById('kpi-goals');
     const kpiConv = document.getElementById('kpi-conv');
+    const kpiXg = document.getElementById('kpi-xg');
     if (kpiShots) kpiShots.innerText = data.length;
     if (kpiTarget) kpiTarget.innerText = target;
     if (kpiGoals) kpiGoals.innerText = goals;
     if (kpiConv) kpiConv.innerText = data.length ? Math.round(goals / data.length * 100) + '%' : '0%';
+    if (kpiXg) kpiXg.innerText = totalXg.toFixed(2);
     
     const filterStatus = document.getElementById('filter-status');
-    if (filterStatus) filterStatus.innerText = `Scope: ${filterLabel}${playerFilter!=='ALL'?' · '+playerFilter:''}`;
+    if (filterStatus) filterStatus.innerText = `Showing: ${filterLabel}${playerFilter !== 'ALL' ? ' · ' + playerFilter : ''}`;
 
     // Table rows
     const tblBody = document.getElementById('table-body');
     if (tblBody) {
-      tblBody.innerHTML=data.slice().reverse().map(s=>`
-        <tr style="border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'">
-          <td style="padding:10px 14px;color:var(--text-muted);font-weight:600;font-size:11px">${s.min}'</td>
-          <td style="padding:10px 14px;font-weight:700;color:${s.team===teamName?'var(--info)':'var(--danger)'};font-size:11px;text-transform:uppercase">${s.team}</td>
-          <td style="padding:10px 14px">
-            <div style="font-weight:600;color:var(--text);font-size:12px">${s.shooter}</div>
-            ${s.assister?`<div style="font-size:10px;color:var(--accent)">↗ Assist: ${s.assister}</div>`:''}
-            ${s.mistakePlayer?`<div style="font-size:10px;color:var(--danger)">⚠ Error: ${s.mistakePlayer}</div>`:''}
-          </td>
-          <td style="padding:10px 14px;color:var(--text-secondary);font-size:11px">${s.type}</td>
-          <td style="padding:10px 14px;color:var(--text-muted);font-size:11px">${s.loc}</td>
-          <td style="padding:10px 14px;font-weight:${s.out==='Goal'?'700':'400'};color:${s.out==='Goal'?'var(--success)':s.out==='On Target'?'var(--info)':'var(--text-muted)'};font-size:11px">${s.out}</td>
-          <td style="padding:10px 14px;text-align:right"><button onclick="delShot(${s.id})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:0 4px;transition:color .2s" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'">&times;</button></td>
-        </tr>`).join('');
+      if (!data.length) {
+        tblBody.innerHTML = `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text-muted)">No attempts logged for this scope. Tap the pitch or click "+ Shot" to record an attempt.</td></tr>`;
+      } else {
+        tblBody.innerHTML=data.slice().reverse().map(s=>{
+          const isMine = s.team === teamName;
+          const sXg = (s.xg !== undefined ? s.xg : calculateXG(s)).toFixed(2);
+          return `
+            <tr style="border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background='transparent'">
+              <td style="padding:10px 12px;color:var(--text-muted);font-weight:600;font-size:11px">${s.min}'</td>
+              <td style="padding:10px 12px;font-weight:700;color:${isMine?'var(--info)':'var(--danger)'};font-size:11px;text-transform:uppercase">${s.team}</td>
+              <td style="padding:10px 12px">
+                <div style="font-weight:600;color:var(--text);font-size:12px">${s.shooter}</div>
+                ${s.assister?`<div style="font-size:10px;color:var(--accent)">↗ Assist: ${s.assister}</div>`:''}
+                ${s.mistakePlayer?`<div style="font-size:10px;color:var(--danger)">⚠ Error: ${s.mistakePlayer}</div>`:''}
+              </td>
+              <td style="padding:10px 12px;color:var(--text-secondary);font-size:11px">${s.type}</td>
+              <td style="padding:10px 12px;color:var(--text-muted);font-size:11px">${s.loc}</td>
+              <td style="padding:10px 12px;font-weight:${s.out==='Goal'?'700':'400'};color:${s.out==='Goal'?'var(--success)':s.out==='On Target'?'var(--info)':'var(--text-muted)'};font-size:11px">${s.out}</td>
+              <td style="padding:10px 12px"><span class="xg-badge">${sXg}</span></td>
+              <td style="padding:10px 12px;text-align:right;white-space:nowrap">
+                <button onclick="editShot(${s.id})" title="Edit event" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:11px;font-weight:700;padding:2px 6px;margin-right:4px">Edit</button>
+                <button onclick="delShot(${s.id})" title="Delete event" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;padding:0 4px;transition:color .2s" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-muted)'">&times;</button>
+              </td>
+            </tr>`;
+        }).join('');
+      }
     }
 
     // Shot dots on pitch
@@ -1177,16 +1819,19 @@ function updateUI(){
     if (pitch) {
       pitch.querySelectorAll('.shot-dot').forEach(d=>d.remove());
       data.forEach(s=>{
+        const isMine = s.team === teamName;
         const d=document.createElement('div');
         d.className='shot-dot';
-        d.style.cssText=`left:${s.x}%;top:${s.y}%;background:${s.team===teamName?'var(--info)':'var(--danger)'};box-shadow:0 0 8px ${s.team===teamName?'rgba(74,127,181,0.5)':'rgba(192,57,43,0.5)'}`;
+        d.style.cssText=`left:${s.x}%;top:${s.y}%;background:${isMine?'var(--info)':'var(--danger)'};box-shadow:0 0 8px ${isMine?'rgba(74,127,181,0.5)':'rgba(192,57,43,0.5)'}`;
         if(s.out==='Goal'){
           d.style.border='2px solid #fff';
           d.style.width='15px';
           d.style.height='15px';
-          d.style.boxShadow = `0 0 12px #fff, 0 0 8px ${s.team===teamName?'var(--info)':'var(--danger)'}`;
+          d.style.boxShadow = `0 0 12px #fff, 0 0 8px ${isMine?'var(--info)':'var(--danger)'}`;
         }
-        d.title=`${s.min}' · ${s.shooter}${s.assister?' · ↗'+s.assister:''} · ${s.out}`;
+        const sXg = (s.xg !== undefined ? s.xg : calculateXG(s)).toFixed(2);
+        d.title=`${s.min}' · ${s.shooter} (${s.team}) · ${s.out} · xG: ${sXg}`;
+        d.onclick = (event) => showDotPopover(s, event);
         pitch.appendChild(d);
       });
     }
@@ -1198,7 +1843,7 @@ function updateUI(){
         const pShots = allShots.filter(s => s.team === teamName && s.shooter === p);
         const pGoals = pShots.filter(s => s.out === 'Goal').length;
         const pAssists = allShots.filter(s => s.team === teamName && s.assister === p).length;
-        const pMistakes = allShots.filter(s => s.team === 'Opponent' && s.type === 'Mistake' && s.mistakePlayer === p).length;
+        const pMistakes = allShots.filter(s => s.team !== teamName && s.type === 'Mistake' && s.mistakePlayer === p).length;
         const totalCon = pShots.length + pAssists + pMistakes;
         return { name: p, goals: pGoals, assists: pAssists, shots: pShots.length, mistakes: pMistakes, totalCon };
       }).filter(p => p.totalCon > 0);
@@ -1241,7 +1886,7 @@ function updateUI(){
         mistakeListEl.innerHTML = `<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px">No turnover errors logged. Defensive transitions secure.</p>`;
       } else {
         mistakeListEl.innerHTML = mistakes.map(s => {
-          const isOpp = s.team === 'Opponent';
+          const isOpp = s.team !== teamName;
           const responsible = isOpp ? s.mistakePlayer : s.shooter;
           const txt = isOpp 
             ? `<span style="color:var(--danger);font-weight:700">${responsible || 'Team'}</span> turnover conceded opponent shot`
@@ -1345,6 +1990,193 @@ function updateUI(){
   }
 }
 
+// -- MATCH CONFIGURATION ------------------------------------------------------
+function openMatchSetup() {
+  document.getElementById('cfg-team-name').value = teamName;
+  document.getElementById('cfg-opp-name').value = opponentName || 'Opponent';
+  document.getElementById('cfg-match-half').value = matchHalf;
+  openModal('match-setup-modal');
+}
+
+function saveMatchSetup() {
+  const t = document.getElementById('cfg-team-name').value.trim() || 'My Team';
+  const opp = document.getElementById('cfg-opp-name').value.trim() || 'Opponent';
+  const h = document.getElementById('cfg-match-half').value;
+  
+  teamName = t;
+  opponentName = opp;
+  matchHalf = h;
+  
+  if (currentUser && currentUser !== 'demo_coach') {
+    localStorage.setItem(teamKey(), teamName);
+    localStorage.setItem(oppKey(), opponentName);
+    localStorage.setItem(halfKey(), matchHalf);
+    syncToCloud();
+  }
+  
+  applyTeamName();
+  updateUI();
+  closeModal('match-setup-modal');
+  showToast('Match settings saved.', 'ok');
+}
+
+function resetMatch() {
+  if (confirm(`Clear active pitch and start a new match? Any unsaved live telemetry will be reset. (Save session first if you want to keep it!)`)) {
+    allShots = [];
+    if (currentUser && currentUser !== 'demo_coach') {
+      localStorage.setItem('cm_active_' + currentUser, JSON.stringify(allShots));
+      syncToCloud();
+    }
+    updateUI();
+    closeModal('match-setup-modal');
+    showToast('Pitch cleared. Ready for kickoff!', 'info');
+  }
+}
+
+// -- EXPORT & SHARING SUITE ---------------------------------------------------
+function openExportModal() {
+  openModal('export-modal');
+}
+
+function exportCSV() {
+  if (!allShots.length) {
+    showToast('No events to export yet.', 'warn');
+    return;
+  }
+  const headers = ['Minute', 'Team', 'Shooter', 'Assister', 'Shot Type', 'Zone', 'Outcome', 'xG', 'Defensive Turnover By', 'Coord_X', 'Coord_Y'];
+  const rows = allShots.map(s => [
+    `"${s.min}"`,
+    `"${s.team}"`,
+    `"${s.shooter || ''}"`,
+    `"${s.assister || ''}"`,
+    `"${s.type || ''}"`,
+    `"${s.loc || ''}"`,
+    `"${s.out || ''}"`,
+    (s.xg !== undefined ? s.xg : calculateXG(s)).toFixed(2),
+    `"${s.mistakePlayer || ''}"`,
+    (s.x || 50).toFixed(1),
+    (s.y || 20).toFixed(1)
+  ]);
+
+  const csvContent = [
+    `# Clutch Metrics Tactical Telemetry Export`,
+    `# Engineered & Crafted by Ninad Hirani`,
+    `# Match: ${teamName} vs ${opponentName || 'Opponent'} (${matchHalf})`,
+    `# Export Date: ${new Date().toISOString()}`,
+    headers.join(','),
+    ...rows.map(r => r.join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `clutch-metrics-${teamName.replace(/\s+/g, '_')}-vs-${(opponentName||'Opponent').replace(/\s+/g, '_')}-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Exported CSV with Ninad Hirani verification header.', 'ok');
+}
+
+function exportJSON() {
+  const matchData = {
+    app: "Clutch Metrics",
+    signature: "NH-CLUTCH-2026.1-TACTICAL-CORE",
+    architect: "Ninad Hirani",
+    timestamp: new Date().toISOString(),
+    match: {
+      team: teamName,
+      opponent: opponentName,
+      period: matchHalf
+    },
+    roster: players,
+    shots: allShots
+  };
+  const blob = new Blob([JSON.stringify(matchData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `clutch-metrics-tactical-backup-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('JSON match backup saved.', 'ok');
+}
+
+function copyHalftimeBriefing() {
+  const ourShots = allShots.filter(s => s.team === teamName);
+  const oppShots = allShots.filter(s => s.team !== teamName);
+  const ourGoals = ourShots.filter(s => s.out === 'Goal').length;
+  const oppGoals = oppShots.filter(s => s.out === 'Goal').length;
+  const ourXG = ourShots.reduce((acc, s) => acc + (s.xg !== undefined ? s.xg : calculateXG(s)), 0).toFixed(2);
+  const oppXG = oppShots.reduce((acc, s) => acc + (s.xg !== undefined ? s.xg : calculateXG(s)), 0).toFixed(2);
+  const mistakes = allShots.filter(s => s.type === 'Mistake');
+
+  const text = [
+    `⚽ *CLUTCH METRICS HALFTIME BRIEFING*`,
+    `Match: ${teamName} vs ${opponentName || 'Opponent'} (${matchHalf})`,
+    `Score: ${teamName} ${ourGoals} - ${oppGoals} ${opponentName || 'Opponent'}`,
+    `Telemetry: ${teamName} ${ourShots.length} shots (${ourXG} xG) | ${opponentName || 'Opponent'} ${oppShots.length} shots (${oppXG} xG)`,
+    `Turnovers Conceded: ${mistakes.length}`,
+    ``,
+    `📋 *KEY TACTICAL DIRECTIVES:*`,
+    `- Exploit half-spaces and prioritize high-value central penetration`,
+    `- Protect against transitional turnovers`,
+    `- Keep shooting discipline high in dangerous zones`,
+    ``,
+    `★ Verified Tactical Report · Crafted by Ninad Hirani`
+  ].join('\n');
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Halftime briefing copied to clipboard!', 'ok');
+    }).catch(() => {
+      prompt('Copy Halftime Briefing:', text);
+    });
+  } else {
+    prompt('Copy Halftime Briefing:', text);
+  }
+}
+
+function printMatchReport() {
+  window.print();
+}
+
+// -- CREATOR STAMP & PROVENANCE MODAL -----------------------------------------
+function openCreatorStampModal() {
+  openModal('creator-stamp-modal');
+}
+
+function applyStampImprint() {
+  const seal = document.getElementById('interactive-seal');
+  const msg = document.getElementById('stamp-status-msg');
+  if (seal) {
+    seal.classList.remove('seal-stamped');
+    void seal.offsetWidth;
+    seal.classList.add('seal-stamped');
+  }
+  if (msg) {
+    msg.innerText = `✓ Authenticated & Imprinted on ${new Date().toLocaleTimeString()} by Ninad Hirani`;
+    msg.style.color = 'var(--success)';
+  }
+  showToast('Ninad Hirani Provenance Stamp Imprinted!', 'ok');
+}
+
+function copyCreatorSignature() {
+  const sig = `CLUTCH METRICS • OFFICIALLY CRAFTED & ARCHITECTED BY NINAD HIRANI [BUILD: NH-CLUTCH-2026.1-TACTICAL-CORE • VERIFIED ORIGINAL]`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(sig).then(() => {
+      showToast('Creator verification signature copied!', 'ok');
+    }).catch(() => {
+      prompt('Creator Signature:', sig);
+    });
+  } else {
+    prompt('Creator Signature:', sig);
+  }
+}
+
 // -- AI INSIGHT ---------------------------------------------------------------
 function generateAIInsight(){
   const status = document.getElementById('ai-status');
@@ -1357,7 +2189,7 @@ function generateAIInsight(){
     <div style="display:flex;flex-direction:column;gap:12px;padding:8px 0">
       <div style="display:flex;align-items:center;gap:8px">
         <div class="loader-spinner" style="width:16px;height:16px;border-width:2px"></div>
-        <span style="font-size:12px;color:var(--accent);font-weight:600">Analyzing match data...</span>
+        <span style="font-size:12px;color:var(--accent);font-weight:600">Analyzing match telemetry & xG...</span>
       </div>
       <div style="height:3px;width:100%;background:var(--border);border-radius:99px;overflow:hidden;position:relative">
         <div style="position:absolute;top:0;left:-40%;width:40%;height:100%;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:progressSweep 1.6s ease-in-out infinite"></div>
@@ -1367,15 +2199,14 @@ function generateAIInsight(){
   
   setTimeout(() => {
     const ourShots = allShots.filter(s => s.team === teamName);
-    const oppShots = allShots.filter(s => s.team === 'Opponent');
+    const oppShots = allShots.filter(s => s.team !== teamName);
     const ourGoals = ourShots.filter(s => s.out === 'Goal').length;
     const oppGoals = oppShots.filter(s => s.out === 'Goal').length;
     const ourConv = ourShots.length ? Math.round(ourGoals/ourShots.length*100) : 0;
     const oppConv = oppShots.length ? Math.round(oppGoals/oppShots.length*100) : 0;
-    const ourMistakes = allShots.filter(s => s.team === 'Opponent' && s.type === 'Mistake');
-    const throughBallCount = ourShots.filter(s => s.type === 'Through Ball').length;
-    const crossCount = ourShots.filter(s => s.type === 'Cross').length;
-    const setPieceCount = ourShots.filter(s => s.type === 'Set Piece').length;
+    const ourXG = ourShots.reduce((acc, s) => acc + (s.xg !== undefined ? s.xg : calculateXG(s)), 0).toFixed(2);
+    const oppXG = oppShots.reduce((acc, s) => acc + (s.xg !== undefined ? s.xg : calculateXG(s)), 0).toFixed(2);
+    const ourMistakes = allShots.filter(s => s.team !== teamName && s.type === 'Mistake');
     const ourFarRange = ourShots.filter(s => s.loc === 'Far Range' || s.loc === 'Outside Box').length;
     const ourBoxShots = ourShots.filter(s => s.loc === 'Center Box' || s.loc === 'Left Box' || s.loc === 'Right Box').length;
 
@@ -1388,62 +2219,62 @@ function generateAIInsight(){
       observation = "Our attacking unit has struggled to log shot attempts. Offensive spacing and progression through the midfield lines must be adjusted.";
       actions.push("Encourage central midfielders to advance higher and take medium-range shots.");
     } else {
-      if(ourConv > 35) {
-        observation = `Excellent conversion rate (${ourConv}%). Our attacking structure is highly efficient with precise execution inside high-opportunity zones.`;
+      if(ourConv > 30 || parseFloat(ourXG) > 1.8) {
+        observation = `High-efficiency attacking output (${ourConv}% conversion, ${ourXG} xG). Attackers are consistently finding high-opportunity zones inside the box.`;
         actions.push("Maintain our high block to squeeze the opponent's build-up phase.");
       } else if (ourFarRange > ourBoxShots) {
-        observation = `High percentage of shots from long-range (${ourFarRange} from Outside Box/Far Range). Prioritize lateral combinations to penetrate the penalty area.`;
-        actions.push("Instruct attackers to make decoy runs to create space in the Center Box.");
+        observation = `Heavy reliance on low-probability attempts (${ourFarRange} from Outside Box/Far Range; total ${ourXG} xG). Prioritize central overloads to penetrate the penalty area.`;
+        actions.push("Instruct attackers to make decoy runs to open the Center Box corridor.");
       } else {
-        observation = `Logged ${ourShots.length} shot attempts with a ${ourConv}% conversion rate. Active progression noted, but finishing in tight areas remains a constraint.`;
-        actions.push("Prioritize high-percentage central targets instead of wide-angle shots.");
+        observation = `Logged ${ourShots.length} shot attempts (${ourXG} xG) with a ${ourConv}% conversion rate. Active progression noted; sharper finishing in tight areas remains key.`;
+        actions.push("Prioritize high-percentage central targets instead of wide-angle attempts.");
       }
     }
 
     if(oppShots.length === 0){
-      threat = "The opponent has conceded total positional control. Our defensive structure remains organized.";
+      threat = "The opponent has conceded positional control. Defensive shape remains solid.";
     } else {
-      if(oppGoals > 2) {
-        threat = `Defensive vulnerability: conceding ${oppGoals} goals. Tighter markings in transition zones are urgent.`;
-        actions.push("Instruct defensive midfielders to drop deeper and protect the central zone.");
-      } else if (oppShots.length > 5) {
-        threat = `Significant opponent volume (${oppShots.length} attempts). Their conversion rate is ${oppConv}%, highlighting transitional vulnerabilities.`;
-        actions.push("Close down opposing wingers earlier on crosses.");
+      if(oppGoals > 1 || parseFloat(oppXG) > 1.5) {
+        threat = `Conceded ${oppGoals} goals on ${oppXG} opponent xG. Tighter markings in half-spaces and transitional coverage are urgent.`;
+        actions.push("Instruct defensive midfielders to drop deeper and protect the central channel.");
+      } else if (oppShots.length > 4) {
+        threat = `Opponent generated ${oppShots.length} attempts (${oppXG} xG, ${oppConv}% conversion), pointing to counter-attack vulnerabilities.`;
+        actions.push("Close down opposing wingers earlier on transitional crosses.");
       } else {
-        threat = "Opponent attacking threat is moderate. Central blocks are keeping attempts outside dangerous zones.";
+        threat = `Opponent threat is constrained (${oppShots.length} attempts, ${oppXG} xG). Central blocks are forcing low-probability attempts.`;
       }
     }
 
     if (ourMistakes.length > 1) {
       const uniquePlayers = [...new Set(ourMistakes.map(s => s.mistakePlayer).filter(Boolean))];
       const playerStr = uniquePlayers.length ? ` (turnovers: ${uniquePlayers.join(', ')})` : "";
-      mistakesText = `Turnover concern: ${ourMistakes.length} opponent shots from lost possession${playerStr}. Players struggling to bypass high presses.`;
-      actions.push("Play wider in build-up; minimize risk with direct switches.");
+      mistakesText = `Turnover alert: ${ourMistakes.length} opponent shots stemmed from lost possession${playerStr}. Quick release under high pressing is needed.`;
+      actions.push("Play wider in build-up; minimize central dribbling risks.");
     } else {
-      mistakesText = "Turnover metrics are low. Possession recovery and discipline remain secure.";
+      mistakesText = "Turnover metrics are low. Possession recovery and structural discipline are reliable.";
     }
 
     if(actions.length < 3){
       actions.push("Ensure full-backs overlap to stretch the opponent's back line.");
-      actions.push("Commit central runners during through-balls to exploit half-spaces.");
+      actions.push("Commit third-man runners to exploit gaps behind the defensive line.");
     }
 
     status.innerText = "Complete";
     status.className = "badge-success";
-    showToast("AI analysis updated.");
+    showToast("AI tactical assessment updated.");
 
     output.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="ai-insight" style="border-left:3px solid var(--info)">
-          <p style="font-size:11px;font-weight:700;color:var(--info);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">1. Offensive Analysis</p>
+          <p style="font-size:11px;font-weight:700;color:var(--info);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">1. Offensive Telemetry & xG</p>
           <p style="font-size:13px;color:var(--text);line-height:1.6">${observation}</p>
         </div>
         <div class="ai-insight" style="border-left:3px solid var(--danger)">
-          <p style="font-size:11px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">2. Opponent Threat</p>
+          <p style="font-size:11px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">2. Opponent Threat & Conceded xG</p>
           <p style="font-size:13px;color:var(--text);line-height:1.6">${threat}</p>
         </div>
         <div class="ai-insight" style="border-left:3px solid var(--accent)">
-          <p style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">3. Turnover Metrics</p>
+          <p style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">3. Turnover & Error Analysis</p>
           <p style="font-size:13px;color:var(--text);line-height:1.6">${mistakesText}</p>
         </div>
         <div style="margin-top:4px">
@@ -1459,7 +2290,7 @@ function generateAIInsight(){
         </div>
       </div>
     `;
-  }, 1200);
+  }, 1000);
 }
 
 // -- HALFTIME SUMMARY ---------------------------------------------------------
@@ -1478,7 +2309,7 @@ function showHalftimeSummary(sessionName) {
     const pShots = allShots.filter(s => s.team === teamName && s.shooter === p);
     const pGoals = pShots.filter(s => s.out === 'Goal').length;
     const pAssists = allShots.filter(s => s.team === teamName && s.assister === p).length;
-    const pMistakes = allShots.filter(s => s.team === 'Opponent' && s.type === 'Mistake' && s.mistakePlayer === p).length;
+    const pMistakes = allShots.filter(s => s.team !== teamName && s.type === 'Mistake' && s.mistakePlayer === p).length;
     const rating = (pGoals * 3.0) + (pAssists * 1.5) + (pShots.length * 0.5) - (pMistakes * 1.0);
     return { name: p, goals: pGoals, assists: pAssists, shots: pShots.length, mistakes: pMistakes, rating };
   });
@@ -1541,17 +2372,20 @@ function saveSession(){
     showToast('You must be logged in to save.', 'warn');
     return;
   }
-  const n=prompt('Enter session name (e.g. vs North Penn H1):');
+  const n=prompt(`Enter session name (e.g. vs ${opponentName || 'Opponent'} H1):`);
   if(!n) return;
   savedSessions[n]={data:[...allShots],date:new Date().toLocaleString()};
-  localStorage.setItem(uKey(),JSON.stringify(savedSessions));
-  syncToCloud();
+  if (currentUser !== 'demo_coach') {
+    localStorage.setItem(uKey(),JSON.stringify(savedSessions));
+    syncToCloud();
+  }
   updateUI();
   showToast(`Session "${n}" saved.`);
   showHalftimeSummary(n);
 }
 
 function loadArchive(n){
+  if (!savedSessions[n]) return;
   allShots=savedSessions[n].data;
   document.getElementById('sessionLabel').innerText=`Archive: ${n}`;
   updateUI();
@@ -1561,8 +2395,10 @@ function loadArchive(n){
 function delArchive(n){
   if(confirm(`Delete session "${n}"?`)){
     delete savedSessions[n];
-    localStorage.setItem(uKey(),JSON.stringify(savedSessions));
-    syncToCloud();
+    if (currentUser !== 'demo_coach') {
+      localStorage.setItem(uKey(),JSON.stringify(savedSessions));
+      syncToCloud();
+    }
     updateUI();
     showToast(`Deleted: ${n}`, 'warn');
   }
@@ -1570,26 +2406,26 @@ function delArchive(n){
 
 // -- COACH'S CORNER DYNAMIC CONTENT -------------------------------------------
 const dailyTips = [
-  "Teams that track shot origins tend to improve conversion rates by 15-20% over a season. Use the spatial map to identify your most productive zones.",
-  "Focus on set piece analytics — they account for roughly 30% of all goals scored in professional football.",
-  "Track your team's shot-to-goal conversion rate across multiple matches to identify trends in finishing quality.",
-  "Central box shots have the highest conversion rate. Prioritize creating opportunities in this zone.",
-  "Half-time tactical adjustments are most effective when backed by data. That's exactly what this dashboard provides.",
-  "Monitoring turnover patterns can reveal defensive weaknesses that are correctable within a single match."
+  "Teams that track shot origins and xG tend to improve conversion rates by 15-20% over a season. Use the spatial map to isolate danger zones.",
+  "Focus on set piece analytics — set pieces account for roughly 30% of all goals scored in competitive matches.",
+  "Track your team's shot-to-goal conversion rate across multiple halves to identify trends in finishing under fatigue.",
+  "Central box shots carry an average xG of 0.35-0.55. Prioritize creating cutbacks into this primary corridor.",
+  "Half-time tactical adjustments are most effective when backed by positional telemetry. That is the core architecture of Clutch Metrics.",
+  "Monitoring defensive turnovers reveals transitional vulnerabilities that are immediately fixable before the second half."
 ];
 const didYouKnow = [
-  "The average professional team takes 12-15 shots per match, but only 30-35% are on target. Elite teams convert around 12% of all shots into goals.",
-  "Expected Goals (xG) models show that shots from inside the six-yard box have an average xG of 0.38, while shots from outside the box average just 0.04.",
-  "Teams that make tactical changes at halftime based on data analysis win 23% more matches than those relying on intuition alone.",
-  "The most dangerous zone on a pitch is the central corridor between the penalty spot and the six-yard box — shots here convert at 3x the average rate.",
-  "Professional coaches review an average of 4-6 hours of match footage per week. Data dashboards like this reduce analysis time by up to 60%."
+  "The average professional team takes 12-15 shots per match, but only 30-35% are on target. Elite teams convert around 12% of total attempts.",
+  "Expected Goals (xG) models reveal that central six-yard box shots average ~0.45 xG, while shots outside the 18-yard box average under 0.05 xG.",
+  "Teams executing data-driven tactical adjustments at halftime achieve a 23% higher win rate than those relying solely on gut feel.",
+  "The half-space channels between the central corridor and wing are the most dangerous buildup zones for penetrating through-balls.",
+  "Clutch Metrics was engineered by Ninad Hirani to give coaches sideline clarity when every single second counts."
 ];
 const quickTips = [
-  "Focus on logging mistakes during the first half — turnover patterns often reveal tactical weaknesses that can be corrected before the second half begins.",
-  "Use the 'Player Focus' filter to isolate individual player performance and identify your most impactful contributors.",
-  "Save each half as a separate session to compare performance trends across matches over time.",
-  "Log opponent shots too — understanding their attack patterns helps you prepare better defensive strategies.",
-  "Review the AI Intel after logging at least 3-4 shots for the most meaningful tactical recommendations."
+  "Tap directly on the pitch where the attempt happened — coordinates, zones, and expected goals calculate instantly.",
+  "Log mistake turnovers conceded during the 1st half to spot pressing triggers you can shut down for the 2nd half.",
+  "Use 'Export Halftime Briefing' to generate a WhatsApp-ready summary to send to assistant coaches in 5 seconds.",
+  "Filter by individual players using the Player Focus bar to review shot volume, conversion, and assists.",
+  "Click any shot dot on the pitch to inspect player details, xG, or edit the event."
 ];
 
 function randomizeCoachCorner() {

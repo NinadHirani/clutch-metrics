@@ -1,6 +1,6 @@
 // Clutch Metrics — Service Worker
 // Bump CACHE_NAME (e.g. v2, v3) whenever you deploy a new version
-const CACHE_NAME = 'clutch-metrics-v1';
+const CACHE_NAME = 'clutch-metrics-v2';
 
 // Static assets to pre-cache on install
 const STATIC_ASSETS = [
